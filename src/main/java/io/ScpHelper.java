@@ -1,3 +1,5 @@
+package io;
+
 import com.jcraft.jsch.*;
 
 import java.io.*;
@@ -7,14 +9,14 @@ public class ScpHelper {
 
     public Properties configProperties;
 
-    ScpHelper() {
+    public ScpHelper() {
         init(); // get properties
     }
 
     private void init() {
         try {
             configProperties = new Properties();
-            InputStream fileInputStream = D2_DB.class.getClassLoader().getResourceAsStream("config.properties");
+            InputStream fileInputStream = ScpHelper.class.getClassLoader().getResourceAsStream("config.properties");
             configProperties.load(fileInputStream);
             fileInputStream.close();
         } catch (IOException ioException) {
@@ -22,31 +24,39 @@ public class ScpHelper {
         }
     }
 
-    public Session getSession() throws JSchException {
+    public Session getSession() {
         JSch jSch = new JSch();
-        jSch.addIdentity(configProperties.getProperty("sshPrivateKey"));
+        try {
+            jSch.addIdentity(configProperties.getProperty("sshPrivateKey"));
 //        jSch.addIdentity("dmwa");
-        Session session = jSch.getSession(
-                configProperties.getProperty("remoteUser"),
-                configProperties.getProperty("remoteHost"),
-                Integer.parseInt(configProperties.getProperty("remotePort")));
+            Session session = jSch.getSession(
+                    configProperties.getProperty("remoteUser"),
+                    configProperties.getProperty("remoteHost"),
+                    Integer.parseInt(configProperties.getProperty("remotePort")));
 
-        session.setConfig("StrictHostKeyChecking", "no");
-        System.out.println("Attempting Connection!");
-        session.connect();
-        System.out.println("Session Connected!");
-        return session;
+            session.setConfig("StrictHostKeyChecking", "no");
+            System.out.println("Attempting Connection!");
+            session.connect();
+            System.out.println("Session Connected!");
+            return session;
+        } catch (JSchException jSchException) {
+            jSchException.printStackTrace();
+            return null;
+        }
     }
 
-    public ChannelSftp getChannel(Session session) throws JSchException, SftpException {
-        ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-        channel.connect();
-        System.out.println("Channel Connected!");
-
-        // change directory: home directory
-        channel.cd(configProperties.getProperty("remoteDbHomeDir"));
-
-        return channel;
+    public ChannelSftp getChannel(Session session) {
+        try {
+            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect();
+            System.out.println("Channel Connected!");
+            // change directory: home directory
+            channel.cd(configProperties.getProperty("remoteDbHomeDir"));
+            return channel;
+        } catch (JSchException | SftpException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public boolean downloadFile(ChannelSftp channel, String path, String downloadFileName) throws SftpException, IOException {
@@ -55,7 +65,7 @@ public class ScpHelper {
         // Checking if destination path contains '/'
         if (path != null
                 && !path.isEmpty()
-                && path.charAt(path.length()-1) != '/') {
+                && path.charAt(path.length() - 1) != '/') {
             path += '/';
         }
 
@@ -80,7 +90,7 @@ public class ScpHelper {
         // Checking if destination path contains '/'
         if (path != null
                 && !path.isEmpty()
-                && path.charAt(path.length()-1) != '/') {
+                && path.charAt(path.length() - 1) != '/') {
             path += '/';
         }
 
@@ -99,7 +109,7 @@ public class ScpHelper {
         // Checking if destination path contains '/'
         if (path != null
                 && !path.isEmpty()
-                && path.charAt(path.length()-1) != '/') {
+                && path.charAt(path.length() - 1) != '/') {
             path += '/';
         }
         channel.rm(path + fileName);
@@ -114,7 +124,7 @@ public class ScpHelper {
         // Checking if destination path contains '/'
         if (path != null
                 && !path.isEmpty()
-                && path.charAt(path.length()-1) != '/') {
+                && path.charAt(path.length() - 1) != '/') {
             path += '/';
         }
         channel.mkdir(path + directoryName);
@@ -129,7 +139,7 @@ public class ScpHelper {
         // Checking if destination path contains '/'
         if (path != null
                 && !path.isEmpty()
-                && path.charAt(path.length()-1) != '/') {
+                && path.charAt(path.length() - 1) != '/') {
             path += '/';
         }
         channel.rmdir(path + directoryName);
