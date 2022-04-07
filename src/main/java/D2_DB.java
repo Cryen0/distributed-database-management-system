@@ -18,7 +18,8 @@ public class D2_DB {
 
         System.out.println("Program Starts!");
         JSch jSch = new JSch();
-        jSch.addIdentity(configProperties.getProperty("sshPrivateKey"));
+//        jSch.addIdentity(configProperties.getProperty("sshPrivateKey"));
+        jSch.addIdentity("dmwa");
         Session session = jSch.getSession(
                 configProperties.getProperty("remoteUser"),
                 configProperties.getProperty("remoteHost"),
