@@ -1,7 +1,7 @@
 package parser;
 
-import io.DatabaseIO;
-import io.DatabaseSetting;
+import services.DatabaseIO;
+import services.DatabaseSetting;
 
 import java.io.File;
 import java.io.IOException;
