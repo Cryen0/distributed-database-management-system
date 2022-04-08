@@ -1,7 +1,8 @@
 package parser;
 
-import services.DatabaseIO;
+import model.Table;
 import services.DatabaseSetting;
+import services.DbManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Parser {
-    DatabaseIO databaseIO = new DatabaseIO();
+
+    DbManager dbManager = DbManager.getInstance();
     Scanner sc = new Scanner(System.in);
     public void parseQuery() throws IOException {
         System.out.println("\nEnter your query: ");
@@ -59,7 +61,10 @@ public class Parser {
 
         } else if(keyword.toUpperCase().equals("TABLE")){
             ArrayList<String> columnNames = getColumnNames(query);
-            databaseIO.createTable(keywordName, columnNames);
+
+            // TODO: Replace this
+            Table table = new Table();
+            dbManager.createTable(table);
         } else {
             System.out.println("Invalid keyword.");
         }
@@ -101,7 +106,7 @@ public class Parser {
         return columnNames;
     }
 
-    private ArrayList<String> getColumnValues(String query){
+    public ArrayList<String> getColumnValues(String query){
         ArrayList<String> columnValues = new ArrayList<String>();
         Matcher queryMatcher = Pattern.compile("\\((.*?)\\)").matcher(query);
         int count = 0;
