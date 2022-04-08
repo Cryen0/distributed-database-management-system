@@ -28,7 +28,6 @@ public class ScpHelper {
         JSch jSch = new JSch();
         try {
             jSch.addIdentity(configProperties.getProperty("sshPrivateKey"));
-//        jSch.addIdentity("dmwa");
             Session session = jSch.getSession(
                     configProperties.getProperty("remoteUser"),
                     configProperties.getProperty("remoteHost"),
