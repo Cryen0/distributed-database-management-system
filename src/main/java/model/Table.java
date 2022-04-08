@@ -1,7 +1,9 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Table {
 
@@ -40,5 +42,28 @@ public class Table {
 
     public void setRecordList(List<Record> recordList) {
         this.recordList = recordList;
+    }
+
+    /*************************************************************************
+     * UTILS
+     *************************************************************************/
+
+    public Map<String, String> getMappedRecord(Record record) {
+        Map<String, String> recordMap = new HashMap<>();
+
+        for (int i = 0; i < columnList.size(); i++) {
+            recordMap.put(columnList.get(i).getName(), record.getValues().get(i));
+        }
+        return recordMap;
+    }
+
+    public List<Map<String, String>> getMappedRecordList() {
+
+        List<Map<String, String>> mappedRecordList = new ArrayList<>();
+        for (Record record : recordList) {
+            mappedRecordList.add(getMappedRecord(record));
+        }
+
+        return mappedRecordList;
     }
 }
