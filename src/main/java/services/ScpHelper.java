@@ -25,12 +25,13 @@ public class ScpHelper {
     }
 
     public Session getSession() {
+        String vmName = configProperties.getProperty("vm");
         JSch jSch = new JSch();
         try {
             jSch.addIdentity(configProperties.getProperty("sshPrivateKey"));
             Session session = jSch.getSession(
                     configProperties.getProperty("remoteUser"),
-                    configProperties.getProperty("remoteHost"),
+                    configProperties.getProperty(vmName + "remoteHost"),
                     Integer.parseInt(configProperties.getProperty("remotePort")));
 
             session.setConfig("StrictHostKeyChecking", "no");
@@ -44,13 +45,16 @@ public class ScpHelper {
         }
     }
 
-    public ChannelSftp getChannel(Session session) {
+    public ChannelSftp getChannel(Session session, String directory) {
         try {
             ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
             channel.connect();
             System.out.println("Channel Connected!");
-            // change directory: home directory
-            channel.cd(configProperties.getProperty("remoteDbHomeDir"));
+            // change directory
+            String remoteDir = configProperties.getProperty("remoteDir");
+            String path = remoteDir + configProperties.getProperty(directory);
+            System.out.println("path = " + path);
+            channel.cd(path);
             return channel;
         } catch (JSchException | SftpException e) {
             e.printStackTrace();
@@ -82,10 +86,7 @@ public class ScpHelper {
         return true;
     }
 
-    public boolean uploadFile(ChannelSftp channel, String path, String uploadFileName) throws IOException, SftpException {
-        File inputFile = new File(uploadFileName);
-        InputStream inputStream = new DataInputStream(new FileInputStream(inputFile));
-
+    public boolean uploadFile(ChannelSftp channel, File uploadFile, String path) {
         // Checking if destination path contains '/'
         if (path != null
                 && !path.isEmpty()
@@ -93,56 +94,43 @@ public class ScpHelper {
             path += '/';
         }
 
-        channel.put(inputStream, (path + uploadFileName));
-
-        inputStream.close();
+        try {
+            InputStream inputStream = new DataInputStream(new FileInputStream(uploadFile));
+            channel.put(inputStream, (path + uploadFile.getName()));
+            inputStream.close();
+        } catch (IOException | SftpException e) {
+            e.printStackTrace();
+            return false;
+        }
         System.out.println("File Uploaded");
-
         return true;
     }
 
-    public boolean deleteFile(ChannelSftp channel, String path, String fileName) throws SftpException {
+    public boolean deleteFile(ChannelSftp channel, String name) throws SftpException {
 
         //TODO: Check if file exists
-
-        // Checking if destination path contains '/'
-        if (path != null
-                && !path.isEmpty()
-                && path.charAt(path.length() - 1) != '/') {
-            path += '/';
-        }
-        channel.rm(path + fileName);
+        channel.rm(name);
 
         return true;
     }
 
-    public boolean makeDirectory(ChannelSftp channel, String path, String directoryName) throws SftpException {
-
-        //TODO: Check if directory exists
-
-        // Checking if destination path contains '/'
-        if (path != null
-                && !path.isEmpty()
-                && path.charAt(path.length() - 1) != '/') {
-            path += '/';
+    public boolean makeDirectory(ChannelSftp channel, String directoryName) {
+        try {
+            channel.mkdir(directoryName);
+        } catch (SftpException e) {
+            e.printStackTrace();
+            return false;
         }
-        channel.mkdir(path + directoryName);
-
         return true;
     }
 
-    public boolean deleteDirectory(ChannelSftp channel, String path, String directoryName) throws SftpException {
-
-        //TODO: Check if directory exists
-
-        // Checking if destination path contains '/'
-        if (path != null
-                && !path.isEmpty()
-                && path.charAt(path.length() - 1) != '/') {
-            path += '/';
+    public boolean deleteDirectory(ChannelSftp channel, String directoryName) {
+        try {
+            channel.rmdir(directoryName);
+        } catch (SftpException e) {
+            e.printStackTrace();
+            return false;
         }
-        channel.rmdir(path + directoryName);
-
         return true;
     }
 }

@@ -7,6 +7,24 @@ public class Column {
 
     private String name;
     private String type;
+    private boolean isPrimary;
+
+    public Column() {
+    }
+
+    public Column(String name, String type, boolean isPrimary) {
+        this.name = name;
+        this.type = type;
+        this.isPrimary = isPrimary;
+    }
+
+    public Column(String[] columnValues) {
+        if (columnValues != null && columnValues.length == 3) {
+            this.name = columnValues[0];
+            this.type = columnValues[1];
+            this.isPrimary = Boolean.parseBoolean(columnValues[2]);
+        }
+    }
 
     /*************************************************************************
      * GETTERS AND SETTERS
@@ -28,25 +46,26 @@ public class Column {
         this.type = type;
     }
 
+    public boolean isPrimary() {
+        return isPrimary;
+    }
+
+    public void setPrimary(boolean primary) {
+        isPrimary = primary;
+    }
+
     /*************************************************************************
      * STATIC UTILS
      *************************************************************************/
-
-    public static Column getColumn(String[] columnValues) {
-        Column column = new Column();
-        if (columnValues != null && columnValues.length == 2) {
-            column.setName(columnValues[0]);
-            column.setType(columnValues[1]);
-        }
-        return column;
-    }
 
     public static String getColumnString(Column column) {
         StringBuilder builder = new StringBuilder();
         builder
                 .append(column.getName())
                 .append("²")
-                .append(column.getType());
+                .append(column.getType())
+                .append("²")
+                .append(column.isPrimary);
         return builder.toString();
     }
 
@@ -56,7 +75,7 @@ public class Column {
             List<String> columnStringList = List.of(columnListString.split("³"));
             for (String columnStr : columnStringList) {
                 String[] columnValues = columnStr.split("²");
-                Column column = Column.getColumn(columnValues);
+                Column column = new Column(columnValues);
                 columns.add(column);
             }
         }

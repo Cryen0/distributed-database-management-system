@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Table {
@@ -7,6 +8,11 @@ public class Table {
     private String name;
     private List<Column> columnList;
     private List<Record> recordList;
+
+    public Table() {
+        this.columnList = new ArrayList<>();
+        this.recordList = new ArrayList<>();
+    }
 
     /*************************************************************************
      * GETTERS AND SETTERS
