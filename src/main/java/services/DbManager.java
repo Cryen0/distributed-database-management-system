@@ -4,13 +4,12 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import model.Column;
+import model.Record;
 import model.Table;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DbManager {
 
@@ -27,6 +26,13 @@ public class DbManager {
         init();
     }
 
+    public static DbManager getInstance() {
+        if (dbManager == null) {
+            dbManager = new DbManager();
+        }
+        return dbManager;
+    }
+
     private void init() {
         try {
             configProperties = new Properties();
@@ -37,14 +43,6 @@ public class DbManager {
             ioException.printStackTrace();
         }
     }
-
-    public static DbManager getInstance() {
-        if (dbManager == null) {
-            dbManager = new DbManager();
-        }
-        return dbManager;
-    }
-
     public boolean disconnectSession() {
         this.session.disconnect();
         System.out.println("Session Disconnected!");
@@ -133,9 +131,7 @@ public class DbManager {
                     // Copy Table to Remote
                     ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
                     channelSftp.cd(this.currentDb);
-                    String remoteFilePath = this.configProperties.getProperty("remoteDir")
-                            + this.configProperties.getProperty("dbDir")
-                            + "/" + this.currentDb;
+                    String remoteFilePath = this.configProperties.getProperty("remoteDir") + this.configProperties.getProperty("dbDir") + "/" + this.currentDb;
                     return scpHelper.uploadFile(channelSftp, tableFile, remoteFilePath);
                 }
             } catch (IOException | SftpException e) {
@@ -143,5 +139,40 @@ public class DbManager {
             }
         }
         return false;
+    }
+
+    public void selectFromTable(Table table, List<Column> columns, Map<String, String> whereMap) {
+        Table fetchedData = new Table();
+        fetchedData.setName(table.getName());
+        fetchedData.setColumnList(columns);
+        if (!whereMap.isEmpty()) {
+            AtomicReference<String> whereColumn = new AtomicReference<>("");
+            AtomicReference<String> whereValue = new AtomicReference<>("");
+            whereMap.forEach((key, value) -> {
+                whereColumn.set(key);
+                whereValue.set(value);
+            });
+            List<Record> records = new ArrayList<>();
+            table.getMappedRecordList().forEach(row -> {
+                if (row.get(whereColumn.get()).equals(whereValue.get())) {
+                    Record record = new Record();
+                    record.setValues(new ArrayList<>(row.values()));
+                    records.add(record);
+                }
+            });
+            table.setRecordList(records);
+        }
+
+        table.getMappedRecordList().forEach(record -> {
+            List<String> row = new ArrayList<>();
+            for(Column column : columns) {
+                row.add(record.get(column.getName()));
+            }
+            System.out.format("%s\n", String.join("|", row));
+        });
+    }
+
+    public void insertIntoTable(Table table, List<String> values) {
+
     }
 }
