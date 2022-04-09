@@ -1,5 +1,7 @@
 package auth;
 
+import services.DbManager;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -10,7 +12,14 @@ import java.util.Scanner;
 
 public class Authentication {
 
-    private String filePath = "Resources\\UserProfile.txt";
+    private DbManager dbManager;
+    private String filePath;
+
+    public Authentication() {
+        this.dbManager = DbManager.getInstance();
+        this.filePath = dbManager.configProperties.getProperty("authDir")
+                + "/UserProfile.txt";
+    }
 
     private String currentUID;
 
@@ -150,6 +159,8 @@ public class Authentication {
             FileWriter fw = new FileWriter(filePath, true);
             fw.write(text);
             fw.close();
+
+            dbManager.pushAuthFile();
         }
         catch(IOException e) {
             return false;
