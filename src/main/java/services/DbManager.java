@@ -4,13 +4,13 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import model.Column;
+import model.QueryLog;
 import model.Record;
 import model.Table;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class DbManager {
 
@@ -146,7 +146,6 @@ public class DbManager {
     }
 
     public boolean createTable(Table table) {
-
         if (isCurrentDbSelected()) {
             String dbPath = configProperties.getProperty("dbDir") + "/" + this.currentDb;
             String tablePath = dbPath + "/" + table.getName() + ".txt";
@@ -218,10 +217,6 @@ public class DbManager {
         String whereColumn = whereString.split("=")[0].trim();
         String whereValue = whereString.split("=")[1].trim();
 
-//        Set<String> keys = whereMap.keySet();
-//        String columnName = keys.iterator().next();
-//        String value = whereMap.get(columnName);
-
         int columnIndex = 0;
         for (Column column : table.getColumnList()) {
             if (column.getName().equals(whereColumn)) {
@@ -241,35 +236,35 @@ public class DbManager {
         return table;
     }
 
-    public Table updateTable(Table table, Map<String, String> updateMap, String whereString) {
-        Table fetchedData = findWhere(table, whereString);
-        //TODO: fix update
-//        List<Record> updatedRecords = new ArrayList<>();
-//        List<Record> updatedRecordList = new ArrayList<>(table.getRecordList());
-//        for(Record oldRecord : table.getRecordList()) {
-//            for(Record fetchedDataRecord : fetchedData.getRecordList()) {
-//                if(oldRecord.getValues().equals(fetchedDataRecord.getValues())) {
-//                    updatedRecordList.remove(oldRecord);
-//                    break;
-//                }
-//            }
-//        }
-//
-//        table.setRecordList(updatedRecordList);
-//
-//        fetchedData.getRecordList().forEach(record -> {
-//            Map<String, String> mappedRecord = fetchedData.getMappedRecord(record);
-//            updateMap.forEach((key, value) -> {
-//                mappedRecord.put(key, value);
-//            });
-//            Record updatedRecord = new Record();
-//            updatedRecord.setValues(new ArrayList<>(mappedRecord.values()));
-//            updatedRecords.add(updatedRecord);
-//        });
-//
-//        fetchedData.setRecordList(updatedRecords);
-//        return Table.merge(table, fetchedData);
-        return null;
+    public Table updateTable(Table table, String updateString, String whereString) {
+        String whereColumn = whereString.split("=")[0].trim();
+        String whereValue = whereString.split("=")[1].trim();
+
+        String updateColumn = updateString.split("=")[0].trim();
+        String updateValue = updateString.split("=")[1].trim();
+
+        int columnIndex = 0;
+        int updateIndex = 0;
+        for(int i = 0; i < table.getColumnList().size(); i++) {
+            Column column = table.getColumnList().get(i);
+            if(column.getName().equals(whereColumn)){
+                columnIndex = i;
+            }
+            if(column.getName().equals(updateColumn)){
+                updateIndex = i;
+            }
+        }
+
+        for(int i = 0; i < table.getRecordList().size(); i++) {
+            Record record = table.getRecordList().get(i);
+            if(record.getValues().get(columnIndex).equals(whereValue)) {
+                List<String> newValues = new ArrayList<>(record.getValues());
+                newValues.set(updateIndex, updateValue);
+                record.setValues(newValues);
+            }
+        }
+
+        return table;
     }
     public int tableCount() {
         try {
