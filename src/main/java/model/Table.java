@@ -72,9 +72,37 @@ public class Table {
         return mappedRecordList;
     }
 
+    public boolean canInsertRecord(Record record) {
+        int primaryKeyIndex = 0;
+        for (int i = 0; i < this.columnList.size(); i++) {
+            if (columnList.get(i).isPrimary()) {
+                primaryKeyIndex = i;
+                break;
+            }
+        }
+        // Checking if primary key exists
+        for (Record eachRecord : this.recordList) {
+            if (eachRecord.getValues().get(primaryKeyIndex).equals(record.getValues().get(primaryKeyIndex))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int getColumnIndex(String columnName) {
+        int columnIndex = 0;
+        for (int i = 0; i < this.columnList.size(); i++) {
+            if (columnList.get(i).isPrimary()) {
+                columnIndex = i;
+                break;
+            }
+        }
+        return columnIndex;
+    }
+
     public static Table merge(Table table1, Table table2) {
         Table mergedTable = new Table();
-        if(!table1.getName().equals(table2.getName()) || Arrays.equals(table1.getColumnList().toArray(), table2.getColumnList().toArray())) {
+        if (!table1.getName().equals(table2.getName()) || Arrays.equals(table1.getColumnList().toArray(), table2.getColumnList().toArray())) {
             throw new IllegalArgumentException("Tables must be of the same type and have the same columns");
         }
 
