@@ -103,6 +103,18 @@ public class DbManager {
         return false;
     }
 
+    public int databaseCount(){
+        try {
+            String dbPath = configProperties.getProperty("dbDir");
+            File dbDir = new File(dbPath);
+            File[] allFiles = dbDir.listFiles();
+            return allFiles.length;
+        }catch (Exception e){
+            return 0;
+        }
+    }
+
+
     /*************************************************************************
      * TABLE UTILS
      *************************************************************************/
@@ -189,6 +201,23 @@ public class DbManager {
             }
             System.out.format("%s\n", String.join("|", row));
         });
+    }
+
+    public int tableCount(){
+        try {
+            String dbPathForDb = configProperties.getProperty("dbDir");
+            File dbDir = new File(dbPathForDb);
+            File[] allDbs = dbDir.listFiles();
+            int totalTable = 0;
+            for (int i = 0; i < allDbs.length ; i++) {
+                File tableDir = new File(String.valueOf(allDbs[i]));
+                File[] allTables = tableDir.listFiles();
+                totalTable += allTables.length;
+            }
+            return totalTable;
+        }catch (Exception e){
+            return 0;
+        }
     }
 
     public void insertIntoTable(Table table, List<String> values) {
