@@ -1,7 +1,6 @@
 import model.Column;
 import model.Record;
 import model.Table;
-<<<<<<< HEAD
 import services.io.TableIO;
 
 public class TempSimulator {
@@ -38,19 +37,6 @@ public class TempSimulator {
 //        DbManager dbManager = DbManager.getInstance();
 
         // Create DB
-=======
-import parser.Parser;
-import services.DbManager;
-import services.ScpHelper;
-
-import java.io.IOException;
-
-public class TempSimulator {
-    public static void main(String[] args) throws IOException {
-        DbManager dbManager = DbManager.getInstance();
-
-//        // Create DB
->>>>>>> 55468995136b2b0d41696564348246de113a0ea4
 //        String dbName = "School";
 //        if (!dbManager.dbExists(dbName)) {
 //            System.out.println("Db Created - " + dbName + ": " + dbManager.createDb(dbName));
@@ -100,14 +86,6 @@ public class TempSimulator {
 //        } else {
 //            System.out.println("Table - " + tableBooks + ": Exists!");
 //        }
-<<<<<<< HEAD
-=======
-
-        Parser parser = new Parser();
-        while(true) {
-            parser.parseQuery();
-        }
->>>>>>> 55468995136b2b0d41696564348246de113a0ea4
 
         // Delete DB
 //        if (dbManager.dbExists("School")) {

@@ -1,13 +1,10 @@
 package model;
 
-<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-=======
 import java.util.*;
->>>>>>> 55468995136b2b0d41696564348246de113a0ea4
 
 public class Table {
 
@@ -48,15 +45,10 @@ public class Table {
         this.recordList = recordList;
     }
 
-<<<<<<< HEAD
-=======
     public boolean columnExists(String columnName) {
         return columnList.stream().anyMatch(column -> column.getName().equals(columnName));
     }
 
-
-
->>>>>>> 55468995136b2b0d41696564348246de113a0ea4
     /*************************************************************************
      * UTILS
      *************************************************************************/
@@ -79,8 +71,6 @@ public class Table {
 
         return mappedRecordList;
     }
-<<<<<<< HEAD
-=======
 
     public static Table merge(Table table1, Table table2) {
         Table mergedTable = new Table();
@@ -98,5 +88,4 @@ public class Table {
 
         return mergedTable;
     }
->>>>>>> 55468995136b2b0d41696564348246de113a0ea4
 }
