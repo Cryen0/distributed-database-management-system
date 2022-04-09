@@ -4,8 +4,11 @@ public class TempSimulator {
     public static void main(String[] args) {
 
         DbManager dbManager = DbManager.getInstance();
-        dbManager.setCurrentDb("School");
-        System.out.println("Table Deleted: " + dbManager.deleteTable("Assignment"));
+//        System.out.println("Directory Cleaned: " + dbManager.cleanDirectory("local"));
+
+        dbManager.disconnectSession();
+//        dbManager.setCurrentDb("School");
+//        System.out.println("Table Deleted: " + dbManager.deleteTable("Assignment"));
 
 //        Record recordToInsert = new Record();
 //

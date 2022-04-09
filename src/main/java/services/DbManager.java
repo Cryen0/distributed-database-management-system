@@ -19,6 +19,7 @@ public class DbManager {
     private ScpHelper scpHelper;
     private Session session;
     private String currentDb;
+    private boolean transactionInProgress;
 
     private DbManager() {
         this.scpHelper = new ScpHelper();
@@ -192,5 +193,52 @@ public class DbManager {
 
     public void insertIntoTable(Table table, List<String> values) {
 
+    }
+
+    /*************************************************************************
+     * TRANSACTION UTILS
+     *************************************************************************/
+
+    public boolean isTransactionInProgress() {
+        return transactionInProgress;
+    }
+
+    public void startTransaction() {
+        this.transactionInProgress = true;
+    }
+
+    public boolean commit() {
+
+        cleanDirectory(this.configProperties.getProperty("transLocalDir"));
+        cleanDirectory(this.configProperties.getProperty("transRemoteDir"));
+        this.transactionInProgress = false;
+        return true;
+    }
+
+    public boolean rollback() {
+        cleanDirectory(this.configProperties.getProperty("transLocalDir"));
+        cleanDirectory(this.configProperties.getProperty("transRemoteDir"));
+        this.transactionInProgress = false;
+        return true;
+    }
+
+    public boolean fetchTables() {
+        return false;
+    }
+
+    public boolean pushTables() {
+        return true;
+    }
+
+    public boolean cleanDirectory(String directoryPath) {
+        File directory = new File(directoryPath);
+        File[] fileList = directory.listFiles();
+        if (fileList == null) {
+            fileList = new File[0];
+        }
+        for (File file : fileList) {
+            file.delete();
+        }
+        return true;
     }
 }
