@@ -6,16 +6,18 @@ public class QueryLog {
     private String db;
     private String time;
     private String query;
+    private String tableName;
 
     public QueryLog() {
     }
 
-    public QueryLog(String virtualMachine, String userId, String db, String time, String query) {
+    public QueryLog(String virtualMachine, String userId, String db, String time, String query, String tableName {
         this.virtualMachine = virtualMachine;
         this.userId = userId;
         this.db = db;
         this.time = time;
         this.query = query;
+        this.tableName = tableName;
     }
 
     /*************************************************************************
@@ -62,6 +64,14 @@ public class QueryLog {
         this.query = query;
     }
 
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
     /*************************************************************************
      * STATIC UTILS
      *************************************************************************/
@@ -74,6 +84,7 @@ public class QueryLog {
         queryLog.setDb(logValues[2]);
         queryLog.setTime(logValues[3]);
         queryLog.setQuery(logValues[4]);
+        queryLog.setQuery(logValues[5]);
         return queryLog;
     }
 
@@ -83,7 +94,8 @@ public class QueryLog {
         builder.append(userId).append("³");
         builder.append(db).append("³");
         builder.append(time).append("³");
-        builder.append(query);
+        builder.append(query).append("³");
+        builder.append(tableName);
 
         return builder.toString();
     }

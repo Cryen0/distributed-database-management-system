@@ -43,6 +43,7 @@ public class DbManager {
             ioException.printStackTrace();
         }
     }
+
     public boolean disconnectSession() {
         this.session.disconnect();
         System.out.println("Session Disconnected!");
@@ -115,6 +116,23 @@ public class DbManager {
         return false;
     }
 
+    public boolean deleteTable(String tableName) {
+        String tablePath = configProperties.getProperty("dbDir") + "/" + this.currentDb + "/" + tableName + ".txt";
+        File tableFile = new File(tablePath);
+
+        // Delete the same table in remote
+        if (tableFile.delete()) {
+            ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
+            try {
+                channelSftp.cd("/" + this.currentDb);
+                return scpHelper.deleteFile(channelSftp, tableName);
+            } catch (SftpException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
     public boolean createTable(Table table) {
 
         if (isCurrentDbSelected()) {
@@ -165,7 +183,7 @@ public class DbManager {
 
         table.getMappedRecordList().forEach(record -> {
             List<String> row = new ArrayList<>();
-            for(Column column : columns) {
+            for (Column column : columns) {
                 row.add(record.get(column.getName()));
             }
             System.out.format("%s\n", String.join("|", row));
