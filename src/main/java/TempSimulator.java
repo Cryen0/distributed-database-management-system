@@ -1,40 +1,40 @@
-import model.Column;
-import model.Record;
-import model.Table;
-import services.io.TableIO;
+import services.DbManager;
 
 public class TempSimulator {
     public static void main(String[] args) {
-        Record recordToInsert = new Record();
 
-        recordToInsert.getValues().add("5");
-        recordToInsert.getValues().add("CourseLocal5");
-        recordToInsert.getValues().add("Winter");
+        DbManager dbManager = DbManager.getInstance();
+        dbManager.setCurrentDb("School");
+        System.out.println("Table Deleted: " + dbManager.deleteTable("Assignment"));
 
-        boolean recordInserted = TableIO.insert("Course", recordToInsert);
-        System.out.println("Record Inserted: " + recordInserted);
+//        Record recordToInsert = new Record();
+//
+//        recordToInsert.getValues().add("5");
+//        recordToInsert.getValues().add("CourseLocal5");
+//        recordToInsert.getValues().add("Winter");
+//
+//        boolean recordInserted = TableIO.insert("Course", recordToInsert);
+//        System.out.println("Record Inserted: " + recordInserted);
+//
+//        Table table = TableIO.readTable("Course", false);
+//        // Print Column
+//        System.out.println("Columns");
+//        for (Column column : table.getColumnList()) {
+//            System.out.println(column.getName()
+//                    + " | " + column.getType()
+//                    + " | " + column.isPrimary());
+//        }
+//
+//        // Print Record
+//        System.out.println("Records");
+//        for (Record record : table.getRecordList()) {
+//
+//            for (String value : record.getValues()) {
+//                System.out.print(value + " | ");
+//            }
+//            System.out.println();
+//        }
 
-        Table table = TableIO.readTable("Course", false);
-        // Print Column
-        System.out.println("Columns");
-        for (Column column : table.getColumnList()) {
-            System.out.println(column.getName()
-                    + " | " + column.getType()
-                    + " | " + column.isPrimary());
-        }
-
-        // Print Record
-        System.out.println("Records");
-        for (Record record : table.getRecordList()) {
-
-            for (String value : record.getValues()) {
-                System.out.print(value + " | ");
-            }
-            System.out.println();
-        }
-
-
-//        DbManager dbManager = DbManager.getInstance();
 
         // Create DB
 //        String dbName = "School";

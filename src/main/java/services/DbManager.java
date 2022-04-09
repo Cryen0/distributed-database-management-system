@@ -124,8 +124,8 @@ public class DbManager {
         if (tableFile.delete()) {
             ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
             try {
-                channelSftp.cd("/" + this.currentDb);
-                return scpHelper.deleteFile(channelSftp, tableName);
+                channelSftp.cd(getCurrentDb());
+                return scpHelper.deleteFile(channelSftp, tableName + ".txt");
             } catch (SftpException e) {
                 e.printStackTrace();
             }

@@ -53,7 +53,6 @@ public class ScpHelper {
             // change directory
             String remoteDir = configProperties.getProperty("remoteDir");
             String path = remoteDir + configProperties.getProperty(directory);
-            System.out.println("path = " + path);
             channel.cd(path);
             return channel;
         } catch (JSchException | SftpException e) {

@@ -11,7 +11,7 @@ public class QueryLog {
     public QueryLog() {
     }
 
-    public QueryLog(String virtualMachine, String userId, String db, String time, String query, String tableName {
+    public QueryLog(String virtualMachine, String userId, String db, String time, String query, String tableName) {
         this.virtualMachine = virtualMachine;
         this.userId = userId;
         this.db = db;
