@@ -1,9 +1,7 @@
 package parser;
 
-import model.Column;
-import model.QueryLog;
+import model.*;
 import model.Record;
-import model.Table;
 import services.DbManager;
 import services.ScpHelper;
 import services.io.TableIO;
@@ -79,24 +77,27 @@ public class Parser {
             String keyword = query.split(" ")[1].trim();
             String keywordName = query.split(" ")[2].trim();
             System.out.println(keyword + " " + keywordName);
+            long startTime = new Timestamp(System.currentTimeMillis()).getTime();
             if (keyword.toUpperCase().equals("DATABASE")) {
                 dbManager.createDb(keywordName);
+                EventLog eventLog = new EventLog("Database created successfully.");
             } else if (keyword.toUpperCase().equals("TABLE")) {
                 Table table = new Table();
                 table.setName(keywordName);
                 table.setColumnList(parseColumns(query));
-
-                long startTime = new Timestamp(System.currentTimeMillis()).getTime();
                 dbManager.createTable(table);
-                long endTime = new Timestamp(System.currentTimeMillis()).getTime();
-                long execTime = endTime - startTime;
-                QueryLog queryLogger = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, keywordName);
                 System.out.println("Table " + table.getName() + " created.");
             } else {
-                System.out.println("Invalid keyword.");
+                throw new Exception("Invalid keyword.");
             }
+            long endTime = new Timestamp(System.currentTimeMillis()).getTime();
+            long execTime = endTime - startTime;
+
+            QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, keywordName);
+            GeneralLog generalLog = new GeneralLog(String.valueOf(execTime), config.getProperty("vm"), dbManager.databaseCount(), dbManager.tableCount());
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application crashed");
         }
     }
 
@@ -111,6 +112,8 @@ public class Parser {
             }
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application crashed");
+
         }
     }
 
@@ -158,9 +161,11 @@ public class Parser {
             dbManager.selectFromTable(mergedTable, columns, whereString);
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
-            QueryLog queryLogger = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+            QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application crashed");
+
         }
     }
 
@@ -192,7 +197,7 @@ public class Parser {
                 TableIO.insert(tableName, record);
                 long endTime = new Timestamp(System.currentTimeMillis()).getTime();
                 long execTime = endTime - startTime;
-                QueryLog queryLogger = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+                QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
                 System.out.println("Record inserted.");
                 //}
             } else {
@@ -200,6 +205,8 @@ public class Parser {
             }
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application crashed");
+
         }
     }
 
@@ -234,9 +241,10 @@ public class Parser {
             TableIO.update(remoteTable, true);
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
-            QueryLog queryLogger = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+            QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application crashed");
         }
     }
 
@@ -270,9 +278,10 @@ public class Parser {
             TableIO.update(remoteTable, true);
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
-            QueryLog queryLogger = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+            QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
         } catch (Exception e) {
-
+            System.out.println(e);
+            EventLog eventLog = new EventLog("Application crashed");
         }
     }
 
