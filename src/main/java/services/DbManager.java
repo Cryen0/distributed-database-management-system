@@ -222,8 +222,16 @@ public class DbManager {
         return true;
     }
 
-    public boolean fetchTables() {
-        return false;
+    public boolean fetchTable(String tableName) {
+        String downloadFilePath = this.configProperties.getProperty("transRemoteDir");
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
+        try {
+            channelSftp.cd(getCurrentDb());
+            return scpHelper.downloadFile(channelSftp, tableName + ".txt", downloadFilePath);
+        } catch (SftpException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public boolean pushTables() {

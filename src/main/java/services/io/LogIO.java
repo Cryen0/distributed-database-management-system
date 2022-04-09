@@ -108,9 +108,9 @@ public class LogIO {
             configProperties.load(fileInputStream);
             fileInputStream.close();
             if (isRemote) {
-                logPath = configProperties.getProperty("transRemoteDir") + "/" + configProperties.getProperty("logDir");
+                logPath = configProperties.getProperty("transLogseDir");
             } else {
-                logPath = configProperties.getProperty("logDir");
+                logPath = configProperties.getProperty("logsDir");
             }
         } catch (IOException ioException) {
             ioException.printStackTrace();
