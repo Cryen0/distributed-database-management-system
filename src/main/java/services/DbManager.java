@@ -363,4 +363,12 @@ public class DbManager {
         ChannelSftp channelSftp = scpHelper.getChannel(this.session, "logsDir");
         return scpHelper.downloadFile(channelSftp, logName + ".txt", downloadFilePath);
     }
+
+    public boolean pushAuthFile() {
+        File authFile = new File(this.configProperties.getProperty("authDir") + "/UserProfile.txt");
+
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "authDir");
+        String remoteFilePath = this.configProperties.getProperty("remoteDir") + this.configProperties.getProperty("authDir");
+        return scpHelper.uploadFile(channelSftp, authFile, remoteFilePath);
+    }
 }

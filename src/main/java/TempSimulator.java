@@ -4,8 +4,8 @@ public class TempSimulator {
     public static void main(String[] args) {
 
         DbManager dbManager = DbManager.getInstance();
-        dbManager.setCurrentDb("School");
-        System.out.println("Rollback Performed: " + dbManager.rollback());
+//        dbManager.setCurrentDb("School");
+        System.out.println("Auth File Pushed: " + dbManager.pushAuthFile());
 
         dbManager.disconnectSession();
 
