@@ -140,6 +140,7 @@ public class Parser {
             Table mergedTable = Table.merge(localTable, remoteTable);
 
             //if(canInsert(mergedTable, record)){
+            //TODO: check if record is valid
             TableIO.insert(tableName, record);
             System.out.println("Record inserted.");
             //}
