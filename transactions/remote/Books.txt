@@ -1,4 +1,0 @@
-BookId²int²true³Name²text²false³Author²varchar²false³Price²double²false
-1³BookNameRemote1³Author1³12.75
-2³BookNameRemote2³Author2³14.75
-3³BookNameRemote3³Author3³16.75
