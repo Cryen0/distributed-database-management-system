@@ -104,11 +104,14 @@ public class DbManager {
     }
 
     public int databaseCount(){
-        String dbPath = configProperties.getProperty("dbDir");
-        File dbDir = new File(dbPath);
-        File[] allFiles = dbDir.listFiles();
-        System.out.println("Total database count is "+allFiles.length);
-        return allFiles.length;
+        try {
+            String dbPath = configProperties.getProperty("dbDir");
+            File dbDir = new File(dbPath);
+            File[] allFiles = dbDir.listFiles();
+            return allFiles.length;
+        }catch (Exception e){
+            return 0;
+        }
     }
 
 
@@ -201,16 +204,20 @@ public class DbManager {
     }
 
     public int tableCount(){
-        String dbPathForDb = configProperties.getProperty("dbDir");
-        File dbDir = new File(dbPathForDb);
-        File[] allDbs = dbDir.listFiles();
-        int totalTable = 0;
-        for (int i = 0; i < allDbs.length ; i++) {
-            File tableDir = new File(String.valueOf(allDbs[i]));
-            File[] allTables = tableDir.listFiles();
-            totalTable += allTables.length;
+        try {
+            String dbPathForDb = configProperties.getProperty("dbDir");
+            File dbDir = new File(dbPathForDb);
+            File[] allDbs = dbDir.listFiles();
+            int totalTable = 0;
+            for (int i = 0; i < allDbs.length ; i++) {
+                File tableDir = new File(String.valueOf(allDbs[i]));
+                File[] allTables = tableDir.listFiles();
+                totalTable += allTables.length;
+            }
+            return totalTable;
+        }catch (Exception e){
+            return 0;
         }
-        return totalTable;
     }
 
     public void insertIntoTable(Table table, List<String> values) {
