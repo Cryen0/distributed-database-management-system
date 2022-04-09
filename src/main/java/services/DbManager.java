@@ -237,9 +237,8 @@ public class DbManager {
     }
 
     public boolean commit() {
-        pushTables();
-        cleanDirectory(this.configProperties.getProperty("transLocalDir"));
-        cleanDirectory(this.configProperties.getProperty("transRemoteDir"));
+        copyTablesToDb(); // Copy to Local
+        pushTables(); // Copy to Remote
         this.transactionInProgress = false;
         return true;
     }
@@ -291,6 +290,55 @@ public class DbManager {
     }
 
     public boolean pushTables() {
+        String transRemoteDirPath = this.configProperties.getProperty("transRemoteDir");
+        File transRemoteDir = new File(transRemoteDirPath);
+        File[] fileList = transRemoteDir.listFiles();
+        if (fileList == null) {
+            fileList = new File[0];
+        }
+
+        // Push Tables to Remote
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
+        try {
+            channelSftp.cd(this.currentDb);
+        } catch (SftpException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        for (File file : fileList) {
+            String remoteFilePath = this.configProperties.getProperty("remoteDir") + this.configProperties.getProperty("dbDir") + "/" + this.currentDb;
+            scpHelper.uploadFile(channelSftp, file, remoteFilePath);
+        }
+        cleanDirectory(this.configProperties.getProperty("transRemoteDir"));
+        return true;
+    }
+
+    public boolean copyTablesToDb() {
+        String transLocalDirPath = this.configProperties.getProperty("transLocalDir");
+        File transLocalDir  = new File(transLocalDirPath);
+        File[] fileList = transLocalDir.listFiles();
+        if (fileList == null) {
+            fileList = new File[0];
+        }
+
+        String dbDirPath = this.configProperties.getProperty("dbDir") + "/" + this.currentDb;
+
+        for (File file : fileList) {
+            String destFilePath = dbDirPath + "/" + file.getName();
+            File destFile = new File(destFilePath);
+            if (destFile.exists()) {
+                destFile.delete();
+            }
+            try {
+                Files.copy(file.toPath(), destFile.toPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        cleanDirectory(this.configProperties.getProperty("transLocalDir"));
         return true;
     }
 

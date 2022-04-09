@@ -5,7 +5,7 @@ public class TempSimulator {
 
         DbManager dbManager = DbManager.getInstance();
         dbManager.setCurrentDb("School");
-        System.out.println("Table Copied: " + dbManager.copyTableToTransactions("Course"));
+        System.out.println("Rollback Performed: " + dbManager.rollback());
 
         dbManager.disconnectSession();
 
