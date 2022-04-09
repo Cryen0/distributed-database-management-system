@@ -7,12 +7,16 @@ public class Record {
 
     private List<String> values;
 
+    public Record() {
+        this.values = new ArrayList<>();
+    }
+
     /*************************************************************************
      * GETTERS AND SETTERS
      *************************************************************************/
 
     public List<String> getValues() {
-        return values == null ? new ArrayList<>() : values;
+        return values;
     }
 
     public void setValues(List<String> values) {

@@ -1,0 +1,7 @@
+CourseID²int²true³Name²varchar²false³Semester²varchar²false
+1³CourseLocal1³Falls
+2³CourseLocal2³Falls
+3³CourseLocal3³Falls
+4³CourseLocal4³Falls
+5³CourseLocal5³Winter
+5³CourseLocal5³Winter
