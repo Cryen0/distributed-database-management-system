@@ -4,8 +4,8 @@ public class TempSimulator {
     public static void main(String[] args) {
 
         DbManager dbManager = DbManager.getInstance();
-//        dbManager.setCurrentDb("School");
-        System.out.println("Log Fetched: " + dbManager.fetchLog("query"));
+        dbManager.setCurrentDb("School");
+        System.out.println("Table Copied: " + dbManager.copyTableToTransactions("Course"));
 
         dbManager.disconnectSession();
 

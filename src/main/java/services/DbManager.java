@@ -8,13 +8,14 @@ import model.Record;
 import model.Table;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DbManager {
 
     private static DbManager dbManager;
-    private Properties configProperties;
+    public Properties configProperties;
 
     private ScpHelper scpHelper;
     private Session session;
@@ -103,17 +104,16 @@ public class DbManager {
         return false;
     }
 
-    public int databaseCount(){
+    public int databaseCount() {
         try {
             String dbPath = configProperties.getProperty("dbDir");
             File dbDir = new File(dbPath);
             File[] allFiles = dbDir.listFiles();
             return allFiles.length;
-        }catch (Exception e){
+        } catch (Exception e) {
             return 0;
         }
     }
-
 
     /*************************************************************************
      * TABLE UTILS
@@ -203,19 +203,19 @@ public class DbManager {
         });
     }
 
-    public int tableCount(){
+    public int tableCount() {
         try {
             String dbPathForDb = configProperties.getProperty("dbDir");
             File dbDir = new File(dbPathForDb);
             File[] allDbs = dbDir.listFiles();
             int totalTable = 0;
-            for (int i = 0; i < allDbs.length ; i++) {
+            for (int i = 0; i < allDbs.length; i++) {
                 File tableDir = new File(String.valueOf(allDbs[i]));
                 File[] allTables = tableDir.listFiles();
                 totalTable += allTables.length;
             }
             return totalTable;
-        }catch (Exception e){
+        } catch (Exception e) {
             return 0;
         }
     }
@@ -237,7 +237,7 @@ public class DbManager {
     }
 
     public boolean commit() {
-
+        pushTables();
         cleanDirectory(this.configProperties.getProperty("transLocalDir"));
         cleanDirectory(this.configProperties.getProperty("transRemoteDir"));
         this.transactionInProgress = false;
@@ -253,6 +253,11 @@ public class DbManager {
 
     public boolean fetchTable(String tableName) {
         String downloadFilePath = this.configProperties.getProperty("transRemoteDir");
+
+        File file = new File(downloadFilePath + "/" + tableName + ".txt");
+        if (file.exists()) {
+            return true;
+        }
         ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
         try {
             channelSftp.cd(getCurrentDb());
@@ -261,6 +266,28 @@ public class DbManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean copyTableToTransactions(String tableName) {
+        String copyFilePath = this.configProperties.getProperty("transLocalDir");
+
+        File file = new File(copyFilePath + "/" + tableName + ".txt");
+        if (file.exists()) {
+            return true;
+        }
+
+        String dbFilePath = this.configProperties.getProperty("dbDir")
+                + "/" + this.currentDb
+                + "/" + tableName + ".txt";
+        File dbFile = new File(dbFilePath);
+        try {
+            Files.copy(dbFile.toPath(), file.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     public boolean pushTables() {

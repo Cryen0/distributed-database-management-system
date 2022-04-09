@@ -4,20 +4,27 @@ import model.EventLog;
 import model.GeneralLog;
 import model.QueryLog;
 import model.Record;
-import services.ScpHelper;
+import services.DbManager;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Scanner;
 
 public class LogIO {
 
+    private static DbManager dbManager = DbManager.getInstance();
+
     public static List<GeneralLog> readGeneralLog(boolean isRemote) {
 
-        List<GeneralLog> generalLogList = new ArrayList<>();
+        if (isRemote) {
+            dbManager.fetchLog("general");
+        }
 
+        List<GeneralLog> generalLogList = new ArrayList<>();
         String filePath = getLogPath(isRemote) + "/" + "general.txt";
         File file = new File(filePath);
         Scanner scanner = null;
@@ -33,10 +40,18 @@ public class LogIO {
             String generalLogString = scanner.nextLine();
             generalLogList.add(new GeneralLog(generalLogString));
         }
+
+        if (isRemote) {
+            dbManager.cleanDirectory(getLogPath(true));
+        }
         return generalLogList;
     }
 
     public static List<EventLog> readEventLog(boolean isRemote) {
+
+        if (isRemote) {
+            dbManager.fetchLog("event");
+        }
 
         List<EventLog> eventLogList = new ArrayList<>();
 
@@ -55,10 +70,18 @@ public class LogIO {
             String eventLogString = scanner.nextLine();
             eventLogList.add(new EventLog(eventLogString));
         }
+
+        if (isRemote) {
+            dbManager.cleanDirectory(getLogPath(true));
+        }
         return eventLogList;
     }
 
     public static List<QueryLog> readQueryLog(boolean isRemote) {
+
+        if (isRemote) {
+            dbManager.fetchLog("query");
+        }
 
         List<QueryLog> queryLogList = new ArrayList<>();
 
@@ -76,6 +99,10 @@ public class LogIO {
         while (scanner.hasNext()) {
             String queryLogString = scanner.nextLine();
             queryLogList.add(QueryLog.getQueryLog(queryLogString));
+        }
+
+        if (isRemote) {
+            dbManager.cleanDirectory(getLogPath(true));
         }
         return queryLogList;
     }
@@ -102,18 +129,10 @@ public class LogIO {
 
     public static String getLogPath(boolean isRemote) {
         String logPath = "";
-        try {
-            Properties configProperties = new Properties();
-            InputStream fileInputStream = ScpHelper.class.getClassLoader().getResourceAsStream("config.properties");
-            configProperties.load(fileInputStream);
-            fileInputStream.close();
-            if (isRemote) {
-                logPath = configProperties.getProperty("transLogseDir");
-            } else {
-                logPath = configProperties.getProperty("logsDir");
-            }
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
+        if (isRemote) {
+            logPath = dbManager.configProperties.getProperty("transLogsDir");
+        } else {
+            logPath = dbManager.configProperties.getProperty("logsDir");
         }
         return logPath;
     }
