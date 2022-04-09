@@ -102,7 +102,7 @@ public class Table {
 
     public static Table merge(Table table1, Table table2) {
         Table mergedTable = new Table();
-        if (!table1.getName().equals(table2.getName()) || Arrays.equals(table1.getColumnList().toArray(), table2.getColumnList().toArray())) {
+        if(!table1.getName().equals(table2.getName()) || !(table1.getColumnList().size() == table2.getColumnList().size())) {
             throw new IllegalArgumentException("Tables must be of the same type and have the same columns");
         }
 

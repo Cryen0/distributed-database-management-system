@@ -36,10 +36,10 @@ public class Parser {
                 parseUse(query);
                 break;
             case "DELETE":
-                //TODO: DELETE OPERATION
+                parseDelete(query);
                 break;
             case "UPDATE":
-                //TODO: UPDATE OPERATION
+                parseUpdate(query);
                 break;
             default:
                 System.out.println("Invalid Operation.");
@@ -57,8 +57,8 @@ public class Parser {
             System.out.println("Please use USE command to select a database.");
             return;
         }
-        String keyword = query.split(" ")[1];
-        String keywordName = query.split(" ")[2];
+        String keyword = query.split(" ")[1].trim();
+        String keywordName = query.split(" ")[2].trim();
         System.out.println(keyword + " " + keywordName);
         if(keyword.toUpperCase().equals("DATABASE")){
             dbManager.createDb(keywordName);
@@ -75,7 +75,7 @@ public class Parser {
     }
 
     private void parseUse(String query){
-        String databaseName = query.split(" ")[2];
+        String databaseName = query.split(" ")[2].trim();
         if(dbManager.setCurrentDb(databaseName)){
             System.out.println("Database " + databaseName + " selected.");
         } else {
@@ -94,7 +94,15 @@ public class Parser {
         }
         Matcher matcher = Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(query);
         matcher.find();
-        String tableName = matcher.group(2);
+        String tableName = matcher.group(2).trim();
+        if(!dbManager.isCurrentDbSelected()){
+            System.out.println("Please use USE command to select a database.");
+            return;
+        }
+        if(!dbManager.tableExists(tableName)){
+            System.out.println("Table " + tableName + " does not exist.");
+            return;
+        }
         Table localTable = TableIO.readTable(tableName, false);
         Table remoteTable = TableIO.readTable(tableName, true);
         List<Column> columns = new ArrayList<>();
@@ -110,17 +118,10 @@ public class Parser {
             }
         }
 
-        Map<String, String> whereMap = new HashMap<>();
-        if(where){
-            String whereClause = matcher.group(3);
-            String[] whereClauseSplit = whereClause.split("=");
-            String whereColumnName = whereClauseSplit[0].trim();
-            String whereValue = whereClauseSplit[1].trim();
-            whereMap.put(whereColumnName, whereValue);
-        }
+        String whereString = where ? matcher.group(3).trim() : "";
 
         Table mergedTable = Table.merge(localTable, remoteTable);
-        dbManager.selectFromTable(mergedTable, columns, whereMap);
+        dbManager.selectFromTable(mergedTable, columns, whereString);
     }
 
     private void parseInsert(String query){
@@ -128,10 +129,13 @@ public class Parser {
             System.out.println("Please use USE command to select a database.");
             return;
         }
-        Matcher matcher = Pattern.compile("INSERT\\sINTO\\s(.*)\\sVALUES\\s\\((.*)\\);", Pattern.CASE_INSENSITIVE).matcher(query);
+        Matcher matcher = Pattern.compile("INSERT\\s+INTO\\s+(.*)\\s+VALUES\\s*\\((.*)\\);", Pattern.CASE_INSENSITIVE).matcher(query);
         if(matcher.find()){
             String tableName = matcher.group(1);
-            List<String> values = new ArrayList<>(Arrays.asList(matcher.group(2).split(",\\s*")));
+            if(!dbManager.tableExists(tableName)){
+                System.out.println("Table " + tableName + " does not exist.");
+            }
+            List<String> values = new ArrayList<>(Arrays.asList(matcher.group(2).replaceAll("\'|\"", "").split(",\\s*")));
             Table localTable = TableIO.readTable(tableName, false);
             Table remoteTable = TableIO.readTable(tableName, true);
 
@@ -149,6 +153,64 @@ public class Parser {
         }
     }
 
+    private void parseUpdate(String query){
+        if(!dbManager.isCurrentDbSelected()){
+            System.out.println("Please use USE command to select a database.");
+        }
+
+        Matcher matcher = Pattern.compile("UPDATE\\s+(.*)\\s+SET\\s+(.*)WHERE\\s*(.*)", Pattern.CASE_INSENSITIVE).matcher(query);
+        if(!matcher.find()){
+            System.out.println("Invalid UPDATE statement.");
+            return;
+        }
+
+        String tableName = matcher.group(1).trim();
+        if(!dbManager.tableExists(tableName)){
+            System.out.println("Table " + tableName + " does not exist.");
+        }
+
+        String[] toUpdateString = matcher.group(2).split(",\\s*");
+        Map<String, String> toUpdateMap = getMapFromStringArray(toUpdateString);
+
+        String whereString = matcher.group(3);
+
+        Table localTable = TableIO.readTable(tableName, false);
+        localTable = dbManager.updateTable(localTable, toUpdateMap, whereString);
+        TableIO.update(localTable, false);
+
+        Table remoteTable = TableIO.readTable(tableName, true);
+        remoteTable = dbManager.updateTable(remoteTable, toUpdateMap, whereString);
+        TableIO.update(remoteTable, true);
+    }
+
+    private void parseDelete(String query){
+        if(!dbManager.isCurrentDbSelected()){
+            System.out.println("Please use USE command to select a database.");
+            return;
+        }
+
+        Matcher matcher = Pattern.compile("DELETE\\s*FROM\\s*(.*)\\s*WHERE\\s*(.*)", Pattern.CASE_INSENSITIVE).matcher(query);
+        if(!matcher.find()){
+            System.out.println("Invalid DELETE statement.");
+            return;
+        }
+
+        String tableName = matcher.group(1).trim();
+        if(!dbManager.tableExists(tableName)){
+            System.out.println("Table " + tableName + " does not exist.");
+            return;
+        }
+
+        String whereString = matcher.group(2);
+
+        Table localTable = TableIO.readTable(tableName, false);
+        localTable = dbManager.deleteFromTable(localTable, whereString);
+        TableIO.update(localTable, false);
+
+        Table remoteTable = TableIO.readTable(tableName, true);
+        remoteTable = dbManager.deleteFromTable(remoteTable, whereString);
+        TableIO.update(remoteTable, true);
+    }
 
     // ----------- HELPER FUNCTIONS -----------
     private List<Column> parseColumns(String query) {
@@ -197,14 +259,12 @@ public class Parser {
         return columnValues;
     }
 
-
-
-    private boolean validateInsertQuery(String query){
-        String[] querySplit = query.split(" ");
-        if(querySplit[0].equalsIgnoreCase("insert") && querySplit[1].equalsIgnoreCase("into") && querySplit[4].equalsIgnoreCase("values")){
-            return true;
-        } else {
-            return false;
+    private Map<String, String> getMapFromStringArray(String[] mappedStrings){
+        Map<String,String> mappedData = new HashMap<>();
+        for(String mappedString : mappedStrings){
+            String[] toUpdateSplit = mappedString.split("=");
+            mappedData.put(toUpdateSplit[0].trim().replaceAll("\'|\"", ""), toUpdateSplit[1].trim().replaceAll("\'|\"", ""));
         }
+        return mappedData;
     }
 }

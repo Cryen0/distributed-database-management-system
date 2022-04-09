@@ -45,7 +45,6 @@ public class DbManager {
             ioException.printStackTrace();
         }
     }
-
     public boolean disconnectSession() {
         this.session.disconnect();
         System.out.println("Session Disconnected!");
@@ -172,28 +171,40 @@ public class DbManager {
         return false;
     }
 
-    public void selectFromTable(Table table, List<Column> columns, Map<String, String> whereMap) {
-        Table fetchedData = new Table();
-        fetchedData.setName(table.getName());
-        fetchedData.setColumnList(columns);
-        if (!whereMap.isEmpty()) {
-            AtomicReference<String> whereColumn = new AtomicReference<>("");
-            AtomicReference<String> whereValue = new AtomicReference<>("");
-            whereMap.forEach((key, value) -> {
-                whereColumn.set(key);
-                whereValue.set(value);
-            });
+    public Table findWhere(Table table, String whereString) {
+        if (!whereString.equals("")) {
+            Table resultTable = new Table();
+            resultTable.setName(table.getName().trim());
+            resultTable.setColumnList(table.getColumnList());
+
+            String[] whereSplit = whereString.split("=");
+            String whereColumn = whereSplit[0].trim();
+            String whereValue = whereSplit[1].trim();
+
             List<Record> records = new ArrayList<>();
+            if(table.getRecordList().isEmpty()) {
+                return table;
+            }
+
             table.getMappedRecordList().forEach(row -> {
-                if (row.get(whereColumn.get()).equals(whereValue.get())) {
+                if (row.get(whereColumn).equals(whereValue)) {
                     Record record = new Record();
                     record.setValues(new ArrayList<>(row.values()));
                     records.add(record);
                 }
             });
-            table.setRecordList(records);
-        }
 
+            resultTable.setRecordList(records);
+            return resultTable;
+        } else {
+            return table;
+        }
+    }
+    public void selectFromTable(Table table, List<Column> columns, String whereString) {
+        Table fetchedData = new Table();
+        fetchedData.setName(table.getName());
+        fetchedData.setColumnList(columns);
+        table = findWhere(table, whereString);
         table.getMappedRecordList().forEach(record -> {
             List<String> row = new ArrayList<>();
             for (Column column : columns) {
@@ -203,6 +214,63 @@ public class DbManager {
         });
     }
 
+    public Table deleteFromTable(Table table, String whereString) {
+        String whereColumn = whereString.split("=")[0].trim();
+        String whereValue = whereString.split("=")[1].trim();
+
+//        Set<String> keys = whereMap.keySet();
+//        String columnName = keys.iterator().next();
+//        String value = whereMap.get(columnName);
+
+        int columnIndex = 0;
+        for (Column column : table.getColumnList()) {
+            if (column.getName().equals(whereColumn)) {
+                break;
+            }
+            columnIndex++;
+        }
+
+        for (int i = 0; i < table.getRecordList().size(); i++) {
+            Record record = table.getRecordList().get(i);
+            if (record.getValues().get(columnIndex).equals(whereValue)) {
+                table.getRecordList().remove(record);
+                i--;
+            }
+        }
+
+        return table;
+    }
+
+    public Table updateTable(Table table, Map<String, String> updateMap, String whereString) {
+        Table fetchedData = findWhere(table, whereString);
+        //TODO: fix update
+//        List<Record> updatedRecords = new ArrayList<>();
+//        List<Record> updatedRecordList = new ArrayList<>(table.getRecordList());
+//        for(Record oldRecord : table.getRecordList()) {
+//            for(Record fetchedDataRecord : fetchedData.getRecordList()) {
+//                if(oldRecord.getValues().equals(fetchedDataRecord.getValues())) {
+//                    updatedRecordList.remove(oldRecord);
+//                    break;
+//                }
+//            }
+//        }
+//
+//        table.setRecordList(updatedRecordList);
+//
+//        fetchedData.getRecordList().forEach(record -> {
+//            Map<String, String> mappedRecord = fetchedData.getMappedRecord(record);
+//            updateMap.forEach((key, value) -> {
+//                mappedRecord.put(key, value);
+//            });
+//            Record updatedRecord = new Record();
+//            updatedRecord.setValues(new ArrayList<>(mappedRecord.values()));
+//            updatedRecords.add(updatedRecord);
+//        });
+//
+//        fetchedData.setRecordList(updatedRecords);
+//        return Table.merge(table, fetchedData);
+        return null;
+    }
     public int tableCount() {
         try {
             String dbPathForDb = configProperties.getProperty("dbDir");
