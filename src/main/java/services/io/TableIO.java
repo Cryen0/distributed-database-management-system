@@ -3,15 +3,25 @@ package services.io;
 import model.Column;
 import model.Record;
 import model.Table;
-import services.ScpHelper;
+import services.DbManager;
 
-import java.io.*;
-import java.util.Properties;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class TableIO {
 
+    private static DbManager dbManager = DbManager.getInstance();
+
     public static Table readTable(String tableName, boolean isRemote) {
+        if (isRemote) {
+            dbManager.fetchTable(tableName);
+        } else {
+            dbManager.copyTableToTransactions(tableName);
+        }
+
         Table table = new Table();
         table.setName(tableName);
 
@@ -86,18 +96,10 @@ public class TableIO {
 
     public static String getTablePath(boolean isRemote) {
         String tablePath = "";
-        try {
-            Properties configProperties = new Properties();
-            InputStream fileInputStream = ScpHelper.class.getClassLoader().getResourceAsStream("config.properties");
-            configProperties.load(fileInputStream);
-            fileInputStream.close();
-            if (isRemote) {
-                tablePath = configProperties.getProperty("transRemoteDir");
-            } else {
-                tablePath = configProperties.getProperty("transLocalDir");
-            }
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
+        if (isRemote) {
+            tablePath = dbManager.configProperties.getProperty("transRemoteDir");
+        } else {
+            tablePath = dbManager.configProperties.getProperty("transLocalDir");
         }
         return tablePath;
     }

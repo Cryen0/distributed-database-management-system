@@ -8,17 +8,19 @@ import model.Record;
 import model.Table;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DbManager {
 
     private static DbManager dbManager;
-    private Properties configProperties;
+    public Properties configProperties;
 
     private ScpHelper scpHelper;
     private Session session;
     private String currentDb;
+    private boolean transactionInProgress;
 
     private DbManager() {
         this.scpHelper = new ScpHelper();
@@ -100,6 +102,17 @@ public class DbManager {
             return scpHelper.deleteDirectory(channelSftp, dbName);
         }
         return false;
+    }
+
+    public int databaseCount() {
+        try {
+            String dbPath = configProperties.getProperty("dbDir");
+            File dbDir = new File(dbPath);
+            File[] allFiles = dbDir.listFiles();
+            return allFiles.length;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     /*************************************************************************
@@ -190,7 +203,164 @@ public class DbManager {
         });
     }
 
+    public int tableCount() {
+        try {
+            String dbPathForDb = configProperties.getProperty("dbDir");
+            File dbDir = new File(dbPathForDb);
+            File[] allDbs = dbDir.listFiles();
+            int totalTable = 0;
+            for (int i = 0; i < allDbs.length; i++) {
+                File tableDir = new File(String.valueOf(allDbs[i]));
+                File[] allTables = tableDir.listFiles();
+                totalTable += allTables.length;
+            }
+            return totalTable;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public void insertIntoTable(Table table, List<String> values) {
 
+    }
+
+    /*************************************************************************
+     * TRANSACTION UTILS
+     *************************************************************************/
+
+    public boolean isTransactionInProgress() {
+        return transactionInProgress;
+    }
+
+    public void startTransaction() {
+        this.transactionInProgress = true;
+    }
+
+    public boolean commit() {
+        copyTablesToDb(); // Copy to Local
+        pushTables(); // Copy to Remote
+        this.transactionInProgress = false;
+        return true;
+    }
+
+    public boolean rollback() {
+        cleanDirectory(this.configProperties.getProperty("transLocalDir"));
+        cleanDirectory(this.configProperties.getProperty("transRemoteDir"));
+        this.transactionInProgress = false;
+        return true;
+    }
+
+    public boolean fetchTable(String tableName) {
+        String downloadFilePath = this.configProperties.getProperty("transRemoteDir");
+
+        File file = new File(downloadFilePath + "/" + tableName + ".txt");
+        if (file.exists()) {
+            return true;
+        }
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
+        try {
+            channelSftp.cd(getCurrentDb());
+            return scpHelper.downloadFile(channelSftp, tableName + ".txt", downloadFilePath);
+        } catch (SftpException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean copyTableToTransactions(String tableName) {
+        String copyFilePath = this.configProperties.getProperty("transLocalDir");
+
+        File file = new File(copyFilePath + "/" + tableName + ".txt");
+        if (file.exists()) {
+            return true;
+        }
+
+        String dbFilePath = this.configProperties.getProperty("dbDir")
+                + "/" + this.currentDb
+                + "/" + tableName + ".txt";
+        File dbFile = new File(dbFilePath);
+        try {
+            Files.copy(dbFile.toPath(), file.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean pushTables() {
+        String transRemoteDirPath = this.configProperties.getProperty("transRemoteDir");
+        File transRemoteDir = new File(transRemoteDirPath);
+        File[] fileList = transRemoteDir.listFiles();
+        if (fileList == null) {
+            fileList = new File[0];
+        }
+
+        // Push Tables to Remote
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "dbDir");
+        try {
+            channelSftp.cd(this.currentDb);
+        } catch (SftpException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        for (File file : fileList) {
+            String remoteFilePath = this.configProperties.getProperty("remoteDir") + this.configProperties.getProperty("dbDir") + "/" + this.currentDb;
+            scpHelper.uploadFile(channelSftp, file, remoteFilePath);
+        }
+        cleanDirectory(this.configProperties.getProperty("transRemoteDir"));
+        return true;
+    }
+
+    public boolean copyTablesToDb() {
+        String transLocalDirPath = this.configProperties.getProperty("transLocalDir");
+        File transLocalDir  = new File(transLocalDirPath);
+        File[] fileList = transLocalDir.listFiles();
+        if (fileList == null) {
+            fileList = new File[0];
+        }
+
+        String dbDirPath = this.configProperties.getProperty("dbDir") + "/" + this.currentDb;
+
+        for (File file : fileList) {
+            String destFilePath = dbDirPath + "/" + file.getName();
+            File destFile = new File(destFilePath);
+            if (destFile.exists()) {
+                destFile.delete();
+            }
+            try {
+                Files.copy(file.toPath(), destFile.toPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        cleanDirectory(this.configProperties.getProperty("transLocalDir"));
+        return true;
+    }
+
+    public boolean cleanDirectory(String directoryPath) {
+        File directory = new File(directoryPath);
+        File[] fileList = directory.listFiles();
+        if (fileList == null) {
+            fileList = new File[0];
+        }
+        for (File file : fileList) {
+            file.delete();
+        }
+        return true;
+    }
+
+    /*************************************************************************
+     * METADATA UTILS
+     *************************************************************************/
+
+    public boolean fetchLog(String logName) {
+        String downloadFilePath = this.configProperties.getProperty("transLogsDir");
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "logsDir");
+        return scpHelper.downloadFile(channelSftp, logName + ".txt", downloadFilePath);
     }
 }

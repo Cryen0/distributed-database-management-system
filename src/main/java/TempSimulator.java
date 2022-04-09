@@ -5,7 +5,11 @@ public class TempSimulator {
 
         DbManager dbManager = DbManager.getInstance();
         dbManager.setCurrentDb("School");
-        System.out.println("Table Deleted: " + dbManager.deleteTable("Assignment"));
+        System.out.println("Rollback Performed: " + dbManager.rollback());
+
+        dbManager.disconnectSession();
+
+//        System.out.println("Table Deleted: " + dbManager.deleteTable("Assignment"));
 
 //        Record recordToInsert = new Record();
 //

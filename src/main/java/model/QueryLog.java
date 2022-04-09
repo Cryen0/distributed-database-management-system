@@ -1,4 +1,5 @@
 package model;
+
 public class QueryLog {
 
     private String virtualMachine;
@@ -65,7 +66,7 @@ public class QueryLog {
     }
 
     public String getTableName() {
-        return tableName;
+        return tableName == null ? "" : this.tableName;
     }
 
     public void setTableName(String tableName) {
@@ -84,7 +85,7 @@ public class QueryLog {
         queryLog.setDb(logValues[2]);
         queryLog.setTime(logValues[3]);
         queryLog.setQuery(logValues[4]);
-        queryLog.setQuery(logValues[5]);
+        queryLog.setTableName(logValues[5]);
         return queryLog;
     }
 

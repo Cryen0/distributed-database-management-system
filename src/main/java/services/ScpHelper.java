@@ -61,8 +61,7 @@ public class ScpHelper {
         }
     }
 
-    public boolean downloadFile(ChannelSftp channel, String path, String downloadFileName) throws SftpException, IOException {
-        InputStream inputStream = channel.get(downloadFileName);
+    public boolean downloadFile(ChannelSftp channel, String downloadFileName, String path) {
 
         // Checking if destination path contains '/'
         if (path != null
@@ -72,15 +71,22 @@ public class ScpHelper {
         }
 
         File outputFile = new File(path + downloadFileName);
-        OutputStream outStream = new FileOutputStream(outputFile);
-
-        byte[] buffer = new byte[8 * 1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            outStream.write(buffer, 0, bytesRead);
+        OutputStream outStream = null;
+        try {
+            InputStream inputStream = channel.get(downloadFileName);
+            outStream = new FileOutputStream(outputFile);
+            byte[] buffer = new byte[8 * 1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, bytesRead);
+            }
+            inputStream.close();
+            outStream.close();
+        } catch (IOException | SftpException e) {
+            e.printStackTrace();
+            return false;
         }
-        inputStream.close();
-        outStream.close();
+
         System.out.println("File Downloaded!");
         return true;
     }
