@@ -249,4 +249,14 @@ public class DbManager {
         }
         return true;
     }
+
+    /*************************************************************************
+     * METADATA UTILS
+     *************************************************************************/
+
+    public boolean fetchLog(String logName) {
+        String downloadFilePath = this.configProperties.getProperty("transLogsDir");
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "logsDir");
+        return scpHelper.downloadFile(channelSftp, logName + ".txt", downloadFilePath);
+    }
 }

@@ -4,8 +4,8 @@ public class TempSimulator {
     public static void main(String[] args) {
 
         DbManager dbManager = DbManager.getInstance();
-        dbManager.setCurrentDb("School");
-        System.out.println("Table Fetched: " + dbManager.fetchTable("Assignment1"));
+//        dbManager.setCurrentDb("School");
+        System.out.println("Log Fetched: " + dbManager.fetchLog("query"));
 
         dbManager.disconnectSession();
 
