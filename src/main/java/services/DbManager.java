@@ -56,7 +56,6 @@ public class DbManager {
 
     public boolean disconnectSession() {
         this.session.disconnect();
-        System.out.println("Session Disconnected!");
         return true;
     }
 

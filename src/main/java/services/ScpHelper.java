@@ -35,9 +35,7 @@ public class ScpHelper {
                     Integer.parseInt(configProperties.getProperty("remotePort")));
 
             session.setConfig("StrictHostKeyChecking", "no");
-            System.out.println("Attempting Connection!");
             session.connect();
-            System.out.println("Session Connected!");
             return session;
         } catch (JSchException jSchException) {
             jSchException.printStackTrace();
@@ -49,7 +47,6 @@ public class ScpHelper {
         try {
             ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
             channel.connect();
-            System.out.println("Channel Connected!");
             // change directory
             String remoteDir = configProperties.getProperty("remoteDir");
             String path = remoteDir + configProperties.getProperty(directory);
@@ -86,8 +83,6 @@ public class ScpHelper {
             e.printStackTrace();
             return false;
         }
-
-        System.out.println("File Downloaded!");
         return true;
     }
 
@@ -107,7 +102,6 @@ public class ScpHelper {
             e.printStackTrace();
             return false;
         }
-        System.out.println("File Uploaded");
         return true;
     }
 
