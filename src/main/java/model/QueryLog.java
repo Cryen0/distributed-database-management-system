@@ -89,7 +89,7 @@ public class QueryLog {
         return queryLog;
     }
 
-    public String getQueryLogString(QueryLog queryLog) {
+    public String getQueryLogString() {
         StringBuilder builder = new StringBuilder();
         builder.append(virtualMachine).append("³");
         builder.append(userId).append("³");

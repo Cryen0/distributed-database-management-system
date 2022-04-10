@@ -3,7 +3,6 @@ package services.io;
 import model.EventLog;
 import model.GeneralLog;
 import model.QueryLog;
-import model.Record;
 import services.DbManager;
 
 import java.io.File;
@@ -107,17 +106,54 @@ public class LogIO {
         return queryLogList;
     }
 
-    public static boolean insert(String logType, Record record) {
+    public static boolean writeToGeneralLog(GeneralLog generalLog) {
 
         // Insert will always be on local
-        String filePath = getLogPath(false) + "/" + logType + ".txt";
+        String filePath = getLogPath(false) + "/general.txt";
         File file = new File(filePath);
 
         try {
             FileWriter fileWriter = new FileWriter(file, true);
-            String recordString = Record.getRecordString(record.getValues());
             fileWriter.write('\n'); // new line
-            fileWriter.write(recordString);
+            fileWriter.write(generalLog.getStatement());
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean writeToEventLog(EventLog eventLog) {
+
+        // Insert will always be on local
+        String filePath = getLogPath(false) + "/event.txt";
+        File file = new File(filePath);
+
+        try {
+            FileWriter fileWriter = new FileWriter(file, true);
+            fileWriter.write('\n'); // new line
+            fileWriter.write(eventLog.getStatement());
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    public static boolean writeToQueryLog(QueryLog queryLog) {
+
+        // Insert will always be on local
+        String filePath = getLogPath(false) + "/query.txt";
+        File file = new File(filePath);
+
+        try {
+            FileWriter fileWriter = new FileWriter(file, true);
+            fileWriter.write('\n'); // new line
+            fileWriter.write(queryLog.getQueryLogString());
             fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
