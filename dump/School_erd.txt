@@ -1,0 +1,18 @@
+================ERD====================
+tableName: Books
+Format : Column_name, type, isPrimaryKey
+Columns :
+1  BookId   int  true
+2  Name   text  false
+3  Author   varchar  false
+4  Price   double  false
+
+tableName: Course
+Format : Column_name, type, isPrimaryKey
+Columns :
+1  CourseID   int  true
+2  Name   varchar  false
+3  Semester   varchar  false
+
+-------------Relation Diagram-------------
+Books ==> Course    relation  N:N
