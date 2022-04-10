@@ -1,10 +1,10 @@
 package parser;
 
 import model.*;
-import model.Record;
 import services.DbManager;
 import services.ScpHelper;
 import services.io.LogIO;
+import services.io.MetadataIO;
 import services.io.TableIO;
 
 import java.io.IOException;
@@ -122,6 +122,7 @@ public class Parser {
 
             GeneralLog generalLog = new GeneralLog(String.valueOf(execTime), config.getProperty("vm"), dbManager.databaseCount(), dbManager.tableCount());
             LogIO.writeToGeneralLog(generalLog);
+            MetadataIO.updateMetaData();
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");

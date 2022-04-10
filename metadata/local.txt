@@ -1,0 +1,24 @@
+Database Name: parthDb
+Table Name: testtable1
+id²int²true³title²text²false
+Table Name: 3
+c1²int²true³c4²varchar²false³c6²varchar²false
+Table Name: 2
+c3²int²false³c4²varchar²true³c5²varchar²false
+Table Name: 1
+c1²int²true³c2²varchar²false³c3²varchar²false
+
+Database Name: meta-test-db
+Table Name: test4
+column1²int²true³column2²text²false
+Table Name: test2
+column1²int²true³column2²text²false
+Table Name: test3
+column1²int²true³column2²text²false
+
+Database Name: School
+Table Name: Books
+BookId²int²true³Name²text²false³Author²varchar²false³Price²double²false
+Table Name: Course
+CourseID²int²true³Name²varchar²false³Semester²varchar²false
+

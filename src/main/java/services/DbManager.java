@@ -481,4 +481,12 @@ public class DbManager {
         String remoteFilePath = this.configProperties.getProperty("remoteDir") + this.configProperties.getProperty("authDir");
         return scpHelper.uploadFile(channelSftp, authFile, remoteFilePath);
     }
+
+    public boolean pushGlobalMetaData() {
+        File authFile = new File(this.configProperties.getProperty("metaDataDir") + "/global.txt");
+
+        ChannelSftp channelSftp = scpHelper.getChannel(this.session, "metaDataDir");
+        String authFilePath = this.configProperties.getProperty("remoteDir") + this.configProperties.getProperty("metaDataDir");
+        return scpHelper.uploadFile(channelSftp, authFile, authFilePath);
+    }
 }

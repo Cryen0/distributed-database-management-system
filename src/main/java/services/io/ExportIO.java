@@ -20,11 +20,12 @@ public class ExportIO {
         dbManager.setCurrentDb(dbName);
         List<String> tableNames = dbManager.getAllTableNames();
 
-        for (String tableName: tableNames) {
+        for (String tableName : tableNames) {
             Table localTable = TableIO.readTable(tableName, false);
             Table remoteTable = TableIO.readTable(tableName, true);
             tableList.add(Table.merge(localTable, remoteTable));
         }
+        dbManager.rollback();
 
         return tableList;
     }
