@@ -27,11 +27,12 @@ public class DbManager {
     private Session session;
     private String currentDb;
     private boolean transactionInProgress;
-//    private boolean autoCommit = true;
+    private boolean autoCommit;
 
     private DbManager() {
         this.scpHelper = new ScpHelper();
         this.session = scpHelper.getSession();
+        this.autoCommit = true;
         init();
     }
 
@@ -52,6 +53,7 @@ public class DbManager {
             ioException.printStackTrace();
         }
     }
+
     public boolean disconnectSession() {
         this.session.disconnect();
         System.out.println("Session Disconnected!");
@@ -220,7 +222,7 @@ public class DbManager {
 
 
             List<Record> records = new ArrayList<>();
-            if(table.getRecordList().isEmpty()) {
+            if (table.getRecordList().isEmpty()) {
                 return table;
             }
 
@@ -285,19 +287,19 @@ public class DbManager {
 
         int columnIndex = 0;
         int updateIndex = 0;
-        for(int i = 0; i < table.getColumnList().size(); i++) {
+        for (int i = 0; i < table.getColumnList().size(); i++) {
             Column column = table.getColumnList().get(i);
-            if(column.getName().equals(whereColumn)){
+            if (column.getName().equals(whereColumn)) {
                 columnIndex = i;
             }
-            if(column.getName().equals(updateColumn)){
+            if (column.getName().equals(updateColumn)) {
                 updateIndex = i;
             }
         }
 
-        for(int i = 0; i < table.getRecordList().size(); i++) {
+        for (int i = 0; i < table.getRecordList().size(); i++) {
             Record record = table.getRecordList().get(i);
-            if(record.getValues().get(columnIndex).equals(whereValue)) {
+            if (record.getValues().get(columnIndex).equals(whereValue)) {
                 List<String> newValues = new ArrayList<>(record.getValues());
                 newValues.set(updateIndex, updateValue);
                 record.setValues(newValues);
@@ -324,17 +326,17 @@ public class DbManager {
         }
     }
 
-    /*************************************************************************
+    /**********************2***************************************************
      * TRANSACTION UTILS
      *************************************************************************/
 
-//    public boolean isAutoCommit() {
-//        return autoCommit;
-//    }
-//
-//    public void setAutoCommit(boolean toggle){
-//        this.autoCommit = toggle;
-//    }
+    public boolean isAutoCommit() {
+        return autoCommit;
+    }
+
+    public void setAutoCommit(boolean autoCommit) {
+        this.autoCommit = autoCommit;
+    }
 
     public boolean isTransactionInProgress() {
         return transactionInProgress;
@@ -424,7 +426,7 @@ public class DbManager {
 
     public boolean copyTablesToDb() {
         String transLocalDirPath = this.configProperties.getProperty("transLocalDir");
-        File transLocalDir  = new File(transLocalDirPath);
+        File transLocalDir = new File(transLocalDirPath);
         File[] fileList = transLocalDir.listFiles();
         if (fileList == null) {
             fileList = new File[0];

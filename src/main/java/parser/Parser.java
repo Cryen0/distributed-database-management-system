@@ -43,27 +43,42 @@ public class Parser {
                 break;
             case "INSERT":
                 parseInsert(query);
+                if (dbManager.isAutoCommit()) {
+                    dbManager.commit();
+                }
                 break;
             case "SELECT":
                 parseSelect(query);
+                if (dbManager.isAutoCommit()) {
+                    dbManager.rollback();
+                }
                 break;
             case "USE":
                 parseUse(query);
                 break;
             case "DELETE":
                 parseDelete(query);
+                if (dbManager.isAutoCommit()) {
+                    dbManager.commit();
+                }
                 break;
             case "UPDATE":
                 parseUpdate(query);
+                if (dbManager.isAutoCommit()) {
+                    dbManager.commit();
+                }
                 break;
-            case "START":
+            case "START": // Start Transaction
+                dbManager.setAutoCommit(false);
                 parseStart(query);
                 break;
             case "COMMIT":
                 parseCommit(query);
+                dbManager.setAutoCommit(true);
                 break;
             case "ROLLBACK":
                 parseRollback(query);
+                dbManager.setAutoCommit(true);
                 break;
             default:
                 System.out.println("Invalid Operation.");
@@ -114,7 +129,7 @@ public class Parser {
 
     private void parseUse(String query) {
         try {
-            if(dbManager.isTransactionInProgress()){
+            if (dbManager.isTransactionInProgress()) {
                 throw new Exception("Cannot change databases in between transaction.");
             }
 
@@ -209,8 +224,8 @@ public class Parser {
                 Table mergedTable = Table.merge(localTable, remoteTable);
 
 
-                if(!mergedTable.canInsertRecord(record)){
-                   throw new Exception("Cannot insert duplicate records.");
+                if (!mergedTable.canInsertRecord(record)) {
+                    throw new Exception("Cannot insert duplicate records.");
                 }
                 TableIO.insert(tableName, record);
                 long endTime = new Timestamp(System.currentTimeMillis()).getTime();
@@ -312,16 +327,16 @@ public class Parser {
     }
 
     private void parseStart(String query) {
-        try{
+        try {
             query = removeSemiColon(query);
-            if(!dbManager.isCurrentDbSelected()){
+            if (!dbManager.isCurrentDbSelected()) {
                 throw new Exception("Please use USE statement to select a database");
             }
             String[] querySplit = query.split("\\s+");
-            if(!(querySplit[1].trim().equalsIgnoreCase("TRANSACTION") || querySplit[1].trim().equalsIgnoreCase("TRANS"))){
+            if (!(querySplit[1].trim().equalsIgnoreCase("TRANSACTION") || querySplit[1].trim().equalsIgnoreCase("TRANS"))) {
                 throw new Exception("Unknown Statement detected.");
             }
-            if(!dbManager.isTransactionInProgress()){
+            if (!dbManager.isTransactionInProgress()) {
 //                dbManager.setAutoCommit(false);
                 dbManager.startTransaction();
                 System.out.println("Transaction has started");
@@ -329,33 +344,33 @@ public class Parser {
                 throw new Exception("Transaction already in progress!");
             }
 
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
 
-    private void parseCommit(String query){
+    private void parseCommit(String query) {
         try {
             query = removeSemiColon(query);
-            if(!dbManager.isTransactionInProgress()){
+            if (!dbManager.isTransactionInProgress()) {
                 throw new Exception("No transaction in process.");
             }
 //            dbManager.setAutoCommit(true);
             dbManager.commit();
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
 
-    private void parseRollback(String query){
+    private void parseRollback(String query) {
         try {
             query = removeSemiColon(query);
-            if(!dbManager.isTransactionInProgress()){
+            if (!dbManager.isTransactionInProgress()) {
                 throw new Exception("No transaction in process.");
             }
 //            dbManager.setAutoCommit(true);
             dbManager.rollback();
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
@@ -414,8 +429,8 @@ public class Parser {
         return mappedData;
     }
 
-    private String removeSemiColon(String query){
-        if(query.charAt(query.length() - 1) == ';'){
+    private String removeSemiColon(String query) {
+        if (query.charAt(query.length() - 1) == ';') {
             query = query.substring(0, query.length() - 1);
         }
         return query;
