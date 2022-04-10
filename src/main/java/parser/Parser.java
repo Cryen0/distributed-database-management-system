@@ -34,7 +34,7 @@ public class Parser {
 
     public void parseQuery() throws IOException {
         System.out.println("\nEnter your query: ");
-        String query = sc.nextLine();
+        String query = removeSemiColon(sc.nextLine());
         String operation = getOperation(query);
 
         switch (operation.toUpperCase()) {
@@ -93,7 +93,6 @@ public class Parser {
     // ----------- PARSERS -----------
     private void parseCreate(String query) {
         try {
-            query = removeSemiColon(query);
             String keyword = query.split(" ")[1].trim();
             String keywordName = query.split(" ")[2].trim();
 
@@ -133,8 +132,6 @@ public class Parser {
                 throw new Exception("Cannot change databases in between transaction.");
             }
 
-            query = removeSemiColon(query);
-
             String databaseName = query.split(" ")[2].trim();
             if (dbManager.setCurrentDb(databaseName)) {
                 System.out.println("Database " + databaseName + " selected.");
@@ -150,7 +147,6 @@ public class Parser {
 
     private void parseSelect(String query) {
         try {
-            query = removeSemiColon(query);
             if (!dbManager.isCurrentDbSelected()) {
                 throw new Exception("Please use USE command to select a database.");
             }
@@ -202,7 +198,6 @@ public class Parser {
 
     private void parseInsert(String query) {
         try {
-            query = removeSemiColon(query);
             if (!dbManager.isCurrentDbSelected()) {
                 throw new Exception("Please use USE command to select a database.");
             }
@@ -247,7 +242,6 @@ public class Parser {
 
     private void parseUpdate(String query) {
         try {
-            query = removeSemiColon(query);
             if (!dbManager.isCurrentDbSelected()) {
                 throw new Exception("Please use USE command to select a database.");
             }
@@ -288,7 +282,6 @@ public class Parser {
 
     private void parseDelete(String query) {
         try {
-            query = removeSemiColon(query);
             if (!dbManager.isCurrentDbSelected()) {
                 throw new Exception("Please use USE command to select a database.");
             }
@@ -328,7 +321,6 @@ public class Parser {
 
     private void parseStart(String query) {
         try {
-            query = removeSemiColon(query);
             if (!dbManager.isCurrentDbSelected()) {
                 throw new Exception("Please use USE statement to select a database");
             }
@@ -351,7 +343,6 @@ public class Parser {
 
     private void parseCommit(String query) {
         try {
-            query = removeSemiColon(query);
             if (!dbManager.isTransactionInProgress()) {
                 throw new Exception("No transaction in process.");
             }
@@ -364,7 +355,6 @@ public class Parser {
 
     private void parseRollback(String query) {
         try {
-            query = removeSemiColon(query);
             if (!dbManager.isTransactionInProgress()) {
                 throw new Exception("No transaction in process.");
             }
