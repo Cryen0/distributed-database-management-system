@@ -82,7 +82,6 @@ public class Parser {
             String keyword = query.split(" ")[1].trim();
             String keywordName = query.split(" ")[2].trim();
 
-            if(dbManager.isAutoCommit()) dbManager.startTransaction();
 
             long startTime = new Timestamp(System.currentTimeMillis()).getTime();
             if (keyword.toUpperCase().equals("DATABASE")) {
@@ -92,10 +91,12 @@ public class Parser {
                 if (!dbManager.isCurrentDbSelected()) {
                     throw new Exception("Please select a database using USE command.");
                 }
+                if(dbManager.isAutoCommit()) dbManager.startTransaction();
                 Table table = new Table();
                 table.setName(keywordName);
                 table.setColumnList(parseColumns(query));
                 dbManager.createTable(table);
+                if(dbManager.isAutoCommit()) dbManager.commit();
                 System.out.println("Table " + table.getName() + " created.");
             } else {
                 throw new Exception("Invalid keyword.");
@@ -104,7 +105,6 @@ public class Parser {
             long execTime = endTime - startTime;
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, keywordName);
             GeneralLog generalLog = new GeneralLog(String.valueOf(execTime), config.getProperty("vm"), dbManager.databaseCount(), dbManager.tableCount());
-            if(dbManager.isAutoCommit()) dbManager.commit();
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
@@ -350,7 +350,7 @@ public class Parser {
 
     // ----------- HELPER FUNCTIONS -----------
     private List<Column> parseColumns(String query) {
-        Matcher matcher = Pattern.compile("\\((.*?)\\)").matcher(query);
+        Matcher matcher = Pattern.compile("\\(\\s*(.*?)\\s*\\)").matcher(query);
         String columnNamesString = "";
         List<Column> parsedColumns = new ArrayList<>();
         if (matcher.find()) {
