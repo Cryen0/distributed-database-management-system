@@ -101,7 +101,9 @@ public class Parser {
             long startTime = new Timestamp(System.currentTimeMillis()).getTime();
             if (keyword.toUpperCase().equals("DATABASE")) {
                 dbManager.createDb(keywordName);
+                System.out.println("Database created successfully.");
                 EventLog eventLog = new EventLog("Database created successfully.");
+                LogIO.writeToEventLog(eventLog);
             } else if (keyword.toUpperCase().equals("TABLE")) {
                 if (!dbManager.isCurrentDbSelected()) {
                     throw new Exception("Please select a database using USE command.");

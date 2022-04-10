@@ -42,11 +42,11 @@ public class Erd {
 
         //tables
         for (int i = 0; i < tables.size(); i++) {
-            Table t = TableIO.readTable(tables.get(i).getName().split(".txt")[0],false);
+            Table t = TableIO.readTable(tables.get(i).getName().split(".txt")[0], false);
 
             //get column list
             List<Column> columnList = t.getColumnList();
-            StringBuilder temp = new StringBuilder("tableName: " +tables.get(i).getName());
+            StringBuilder temp = new StringBuilder("tableName: " + tables.get(i).getName());
             temp.append(System.getProperty("line.separator"));
             temp.append("Format : Column_name, type, isPrimaryKey");
             temp.append(System.getProperty("line.separator"));
@@ -58,7 +58,8 @@ public class Erd {
             //get name,isPk for the single table
             for (int j = 0; j < columnList.size(); j++) {
                 columnDetailForTable.put(columnList.get(j).getName(), columnList.get(j).isPrimary());
-                temp.append(j+1 + "  " + columnList.get(j).getName() + "   " + columnList.get(j).getType() + "  " +columnList.get(j).isPrimary());
+                String primaryKey = columnList.get(j).isPrimary() ? "Primary Key" : "";
+                temp.append(j + 1 + "  " + columnList.get(j).getName() + "   " + columnList.get(j).getType() + "  " + primaryKey);
                 temp.append(System.getProperty("line.separator"));
             }
 
@@ -66,7 +67,7 @@ public class Erd {
             finalString.append(System.getProperty("line.separator"));
 
             //add into the main hashmap
-            columnDetailForDb.put(i+1,columnDetailForTable);
+            columnDetailForDb.put(i + 1, columnDetailForTable);
         }
 
 
@@ -75,30 +76,30 @@ public class Erd {
             HashMap<String, Boolean> current = columnDetailForDb.get(k);
 
             //another tables
-            for (int l = k+1; l <= columnDetailForDb.size(); l++) {
+            for (int l = k + 1; l <= columnDetailForDb.size(); l++) {
                 HashMap<String, Boolean> nextTable = columnDetailForDb.get(l);
                 //comparison between current(name,isPrimary) ==  next(name,isPrimary)
 
-                for ( String key : current.keySet()) {
+                for (String key : current.keySet()) {
                     //key and value a pair of current
                     String colNameForCurrent = key;
                     Boolean isPrimaryKeyForCurrent = current.get(key);
 
                     // get next(name,isPrimary)
-                    for ( String keyForNext : nextTable.keySet() ) {
+                    for (String keyForNext : nextTable.keySet()) {
                         String colNameForNext = keyForNext;
                         Boolean isPrimaryKeyForNext = nextTable.get(keyForNext);
-                        if(colNameForCurrent.equals(colNameForNext) && isPrimaryKeyForCurrent && isPrimaryKeyForNext){
-                            String op = tables.get(k-1).getName() + " ==> " +tables.get(l-1).getName() + "    relation  "+"1:1";
+                        if (colNameForCurrent.equals(colNameForNext) && isPrimaryKeyForCurrent && isPrimaryKeyForNext) {
+                            String op = tables.get(k - 1).getName() + " ==> " + tables.get(l - 1).getName() + "    relation  " + "1:1";
                             //1:1
                             output.add(op);
-                        }else if(colNameForCurrent.equals(colNameForNext) && isPrimaryKeyForCurrent && !isPrimaryKeyForNext ){
+                        } else if (colNameForCurrent.equals(colNameForNext) && isPrimaryKeyForCurrent && !isPrimaryKeyForNext) {
                             //1:N
-                            String op = tables.get(k-1).getName() + " ==> " +tables.get(l-1).getName() + "    relation  "+"1:N";
+                            String op = tables.get(k - 1).getName() + " ==> " + tables.get(l - 1).getName() + "    relation  " + "1:N";
                             output.add(op);
-                        }else if(colNameForCurrent.equals(colNameForNext) && !isPrimaryKeyForCurrent && !isPrimaryKeyForNext ){
+                        } else if (colNameForCurrent.equals(colNameForNext) && !isPrimaryKeyForCurrent && !isPrimaryKeyForNext) {
                             //N:N
-                            String op = tables.get(k-1).getName() + " ==> " +tables.get(l-1).getName() + "    relation  "+"N:N";
+                            String op = tables.get(k - 1).getName() + " ==> " + tables.get(l - 1).getName() + "    relation  " + "N:N";
                             output.add(op);
                         }
                     }
@@ -117,7 +118,7 @@ public class Erd {
             finalString.append(System.getProperty("line.separator"));
         }
 
-        FileWriter myWriter = new FileWriter("dump/"+ dbName+"_erd.txt");
+        FileWriter myWriter = new FileWriter("dump/" + dbName + "_erd.txt");
         myWriter.write(String.valueOf(finalString));
         myWriter.close();
     }

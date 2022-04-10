@@ -23,7 +23,7 @@ public class Analytics {
 
         //writing to a file
         try {
-            FileWriter myWriter = new FileWriter("Logs/Analytics.txt");
+            FileWriter myWriter = new FileWriter("logs/Analytics.txt");
             myWriter.write(finalOutcome);
             myWriter.close();
         } catch (IOException e) {
@@ -131,21 +131,6 @@ public class Analytics {
         }
         return hs;
     }
-
-    //getting tables using db name
-//    private HashSet<String> getTables(String db)
-//    {
-//        HashSet<String> hs = new HashSet<String>();
-//
-//        for(QueryLog q: lq) {
-//            if(q.getDb().trim().toLowerCase(Locale.ROOT).equals(db.trim().toLowerCase(Locale.ROOT)))
-//            {
-//                hs.add(q.getQuery().trim().split(" ")[2]);
-//            }
-//
-//        }
-//        return hs;
-//    }
 
 //    //getting all VMs
     private HashSet<String> getVms()
