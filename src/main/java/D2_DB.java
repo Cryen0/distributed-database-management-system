@@ -5,7 +5,9 @@ import com.jcraft.jsch.SftpException;
 import parser.Parser;
 import transactions.Transaction;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Scanner;
 
 public class D2_DB {
@@ -14,15 +16,18 @@ public class D2_DB {
 
         //Auth strts here
         boolean IsLoggedIn = false;
+        InputStreamReader ir = new InputStreamReader(System.in);
+        BufferedReader bufferedReader = new BufferedReader(ir);
         Scanner sc = new Scanner(System.in);
         Authentication auth = new Authentication();
 
         while (!IsLoggedIn) {
             System.out.println("Please enter the numbers given below to perform the following action:\n1: SignUp\n2: Login");
-            System.out.println("Enter your command: ");
-            int inputt = Integer.parseInt(sc.nextLine());
-            switch (inputt) {
-                case 1:
+            System.out.print("Enter your command:\t");
+//            String inputt = Integer.parseInt(sc.nextLine());
+            String input = bufferedReader.readLine();
+            switch (input) {
+                case "1":
                     try {
                         auth.signUp();
                     } catch (Exception e) {
@@ -30,7 +35,7 @@ public class D2_DB {
                         e.printStackTrace();
                     }
                     break;
-                case 2:
+                case "2":
                     try {
                         if (auth.logIn()) {
                             IsLoggedIn = true;
@@ -51,7 +56,7 @@ public class D2_DB {
         String currentUID = auth.getCurrentUID();
         System.out.println("Welcome " + currentUID);
 
-        abc:
+        operationLoop:
         while (true) {
 
             System.out.println("Which operation you wanna perform?\nPlease select provide number between 1 to 4 inclusive");
@@ -61,27 +66,28 @@ public class D2_DB {
             System.out.println("3. Data Models");
             System.out.println("4. Analytics");
             System.out.println("5. Exit");
-            System.out.print("Enter your command: ");
-            String input = sc.nextLine();
-            Integer op = Integer.parseInt(input);
+            System.out.print("Enter your command:\t");
+//            String input = sc.nextLine();
+//            Integer op = Integer.parseInt(input);
+            String op = bufferedReader.readLine();
             //System.out.println("\n");
             switch (op) {
-                case 1:
+                case "1":
                     Parser parser = new Parser(currentUID);
                     parser.parseQuery();
                     break;
-                case 2:
+                case "2":
                     // code block to export
                     break;
-                case 3:
+                case "3":
                     // code block for Data Models
                     break;
-                case 4:
+                case "4":
                     Analytics a = new Analytics();
                     a.generateAnalytics();
                     break;
-                case 5:
-                    break abc;
+                case "5":
+                    break operationLoop;
                 default:
                     System.out.println("Please select correct input");
                     break;
