@@ -2,8 +2,8 @@ import analysis.Analytics;
 import auth.Authentication;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
+import export.Export;
 import parser.Parser;
-import transactions.Transaction;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -78,6 +78,10 @@ public class D2_DB {
                     break;
                 case "2":
                     // code block to export
+                    Export dump = new Export();
+                    System.out.print("Enter Databse Name: ");
+                    String db = sc.next();
+                    dump.export(db);
                     break;
                 case "3":
                     // code block for Data Models
