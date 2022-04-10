@@ -21,6 +21,7 @@ public class DbManager {
     private Session session;
     private String currentDb;
     private boolean transactionInProgress;
+    private boolean autoCommit = true;
 
     private DbManager() {
         this.scpHelper = new ScpHelper();
@@ -283,13 +284,17 @@ public class DbManager {
         }
     }
 
-    public void insertIntoTable(Table table, List<String> values) {
-
-    }
-
     /*************************************************************************
      * TRANSACTION UTILS
      *************************************************************************/
+
+    public boolean isAutoCommit() {
+        return autoCommit;
+    }
+
+    public void setAutoCommit(boolean toggle){
+        this.autoCommit = toggle;
+    }
 
     public boolean isTransactionInProgress() {
         return transactionInProgress;

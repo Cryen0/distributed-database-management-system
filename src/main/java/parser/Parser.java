@@ -25,8 +25,8 @@ public class Parser {
         config = new Properties();
         try {
             InputStream fileInputStream = ScpHelper.class.getClassLoader().getResourceAsStream("config.properties");
-            fileInputStream.close();
             config.load(fileInputStream);
+            fileInputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -56,6 +56,15 @@ public class Parser {
             case "UPDATE":
                 parseUpdate(query);
                 break;
+            case "START":
+                parseStart(query);
+                break;
+            case "COMMIT":
+                parseCommit(query);
+                break;
+            case "ROLLBACK":
+                parseRollback(query);
+                break;
             default:
                 System.out.println("Invalid Operation.");
                 break;
@@ -69,19 +78,20 @@ public class Parser {
     // ----------- PARSERS -----------
     private void parseCreate(String query) {
         try {
-
             query = removeSemiColon(query);
-            if (!dbManager.isCurrentDbSelected()) {
-                throw new Exception("Please select a database using USE command.");
-            }
             String keyword = query.split(" ")[1].trim();
             String keywordName = query.split(" ")[2].trim();
-            System.out.println(keyword + " " + keywordName);
+
+            if(dbManager.isAutoCommit()) dbManager.startTransaction();
+
             long startTime = new Timestamp(System.currentTimeMillis()).getTime();
             if (keyword.toUpperCase().equals("DATABASE")) {
                 dbManager.createDb(keywordName);
                 EventLog eventLog = new EventLog("Database created successfully.");
             } else if (keyword.toUpperCase().equals("TABLE")) {
+                if (!dbManager.isCurrentDbSelected()) {
+                    throw new Exception("Please select a database using USE command.");
+                }
                 Table table = new Table();
                 table.setName(keywordName);
                 table.setColumnList(parseColumns(query));
@@ -92,12 +102,13 @@ public class Parser {
             }
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
-
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, keywordName);
             GeneralLog generalLog = new GeneralLog(String.valueOf(execTime), config.getProperty("vm"), dbManager.databaseCount(), dbManager.tableCount());
+            if(dbManager.isAutoCommit()) dbManager.commit();
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
+            dbManager.rollback();
         }
     }
 
@@ -183,6 +194,7 @@ public class Parser {
                 }
                 List<String> values = new ArrayList<>(Arrays.asList(matcher.group(2).replaceAll("\'|\"", "").split(",\\s*")));
 
+                if(dbManager.isAutoCommit()) dbManager.startTransaction();
                 long startTime = new Timestamp(System.currentTimeMillis()).getTime();
                 Table localTable = TableIO.readTable(tableName, false);
                 Table remoteTable = TableIO.readTable(tableName, true);
@@ -191,21 +203,24 @@ public class Parser {
                 record.setValues(values);
                 Table mergedTable = Table.merge(localTable, remoteTable);
 
-                //if(canInsert(mergedTable, record)){
-                //TODO: check if record is valid
 
+                if(!mergedTable.canInsertRecord(record)){
+                   throw new Exception("Cannot insert duplicate records.");
+                }
                 TableIO.insert(tableName, record);
                 long endTime = new Timestamp(System.currentTimeMillis()).getTime();
                 long execTime = endTime - startTime;
                 QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
                 System.out.println("Record inserted.");
-                //}
+                if(dbManager.isAutoCommit()) dbManager.commit();
+
             } else {
                 throw new Exception("Invalid INSERT statement.");
             }
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
+            dbManager.rollback();
 
         }
     }
@@ -232,6 +247,7 @@ public class Parser {
             String whereString = matcher.group(3);
 
             long startTime = new Timestamp(System.currentTimeMillis()).getTime();
+            if(dbManager.isAutoCommit()) dbManager.startTransaction();
             Table localTable = TableIO.readTable(tableName, false);
             localTable = dbManager.updateTable(localTable, updateString, whereString);
             TableIO.update(localTable, false);
@@ -242,9 +258,11 @@ public class Parser {
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+            if(dbManager.isAutoCommit()) dbManager.commit();
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
+            dbManager.rollback();
         }
     }
 
@@ -268,6 +286,7 @@ public class Parser {
 
             String whereString = matcher.group(2);
 
+            if(dbManager.isAutoCommit()) dbManager.startTransaction();
             long startTime = new Timestamp(System.currentTimeMillis()).getTime();
             Table localTable = TableIO.readTable(tableName, false);
             localTable = dbManager.deleteFromTable(localTable, whereString);
@@ -279,9 +298,53 @@ public class Parser {
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+            if(dbManager.isAutoCommit()) dbManager.commit();
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
+            dbManager.rollback();
+        }
+    }
+
+    private void parseStart(String query) {
+        String[] querySplit = query.split("\\s+");
+        try{
+            if(!querySplit[1].equalsIgnoreCase("TRANSACTION") || !querySplit[1].equalsIgnoreCase("TRANS")){
+                throw new Exception("Unknown Statement detected.");
+            }
+            if(!dbManager.isTransactionInProgress()){
+                dbManager.setAutoCommit(false);
+                System.out.println("Transaction has started");
+            } else {
+                throw new Exception("Transaction already in progress!");
+            }
+
+        } catch (Exception e){
+            System.out.println(e);
+        }
+    }
+
+    private void parseCommit(String query){
+        try {
+            if(!dbManager.isTransactionInProgress()){
+                throw new Exception("No transaction in process.");
+            }
+            dbManager.setAutoCommit(true);
+            dbManager.commit();
+        } catch (Exception e){
+            System.out.println(e);
+        }
+    }
+
+    private void parseRollback(String query){
+        try {
+            if(!dbManager.isTransactionInProgress()){
+                throw new Exception("No transaction in process.");
+            }
+            dbManager.setAutoCommit(true);
+            dbManager.rollback();
+        } catch (Exception e){
+            System.out.println(e);
         }
     }
 
@@ -301,7 +364,7 @@ public class Parser {
                 column.setName(columnEntrySplit[0].trim());
                 column.setType(columnEntrySplit[1].trim());
                 if (columnEntrySplit.length > 3) {
-                    if (columnEntrySplit[3].trim().equals("PRIMARY")) {
+                    if (columnEntrySplit[2].trim().equalsIgnoreCase("PRIMARY")) {
                         column.setPrimary(true);
                     }
                 } else {
@@ -340,7 +403,7 @@ public class Parser {
     }
 
     private String removeSemiColon(String query){
-        if(query.charAt(query.length()) == ';'){
+        if(query.charAt(query.length() - 1) == ';'){
             query = query.substring(0, query.length() - 1);
         }
         return query;
