@@ -1,3 +1,4 @@
+import analysis.Analytics;
 import auth.Authentication;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
@@ -76,7 +77,8 @@ public class D2_DB {
                     // code block for Data Models
                     break;
                 case 4:
-                    // code block for Analytics
+                    Analytics a = new Analytics();
+                    a.generateAnalytics();
                     break;
                 case 5:
                     break abc;
