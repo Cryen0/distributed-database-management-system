@@ -1,3 +1,4 @@
+import analysis.Analytics;
 import auth.Authentication;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
@@ -66,7 +67,7 @@ public class D2_DB {
             //System.out.println("\n");
             switch (op) {
                 case 1:
-                    Parser parser = new Parser();
+                    Parser parser = new Parser(currentUID);
                     parser.parseQuery();
                     break;
                 case 2:
@@ -76,7 +77,8 @@ public class D2_DB {
                     // code block for Data Models
                     break;
                 case 4:
-                    // code block for Analytics
+                    Analytics a = new Analytics();
+                    a.generateAnalytics();
                     break;
                 case 5:
                     break abc;
@@ -92,7 +94,7 @@ public class D2_DB {
 
         System.out.print("Enter your query here: ");
         String query = sc.nextLine();
-        Parser parser = new Parser();
+        Parser parser = new Parser(currentUID);
         parser.getColumnValues(query.trim());
 
 //        ScpHelper scpHelper = new ScpHelper();

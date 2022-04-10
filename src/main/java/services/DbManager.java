@@ -7,9 +7,15 @@ import model.Column;
 import model.Record;
 import model.Table;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DbManager {
@@ -21,6 +27,7 @@ public class DbManager {
     private Session session;
     private String currentDb;
     private boolean transactionInProgress;
+    private boolean autoCommit = true;
 
     private DbManager() {
         this.scpHelper = new ScpHelper();
@@ -45,7 +52,6 @@ public class DbManager {
             ioException.printStackTrace();
         }
     }
-
     public boolean disconnectSession() {
         this.session.disconnect();
         System.out.println("Session Disconnected!");
@@ -147,7 +153,6 @@ public class DbManager {
     }
 
     public boolean createTable(Table table) {
-
         if (isCurrentDbSelected()) {
             String dbPath = configProperties.getProperty("dbDir") + "/" + this.currentDb;
             String tablePath = dbPath + "/" + table.getName() + ".txt";
@@ -200,17 +205,45 @@ public class DbManager {
                 whereColumn.set(key);
                 whereValue.set(value);
             });
+        }
+    }
+
+    public Table findWhere(Table table, String whereString) {
+        if (!whereString.equals("")) {
+            Table resultTable = new Table();
+            resultTable.setName(table.getName().trim());
+            resultTable.setColumnList(table.getColumnList());
+
+            String[] whereSplit = whereString.split("=");
+            String whereColumn = whereSplit[0].trim();
+            String whereValue = whereSplit[1].trim();
+
+
             List<Record> records = new ArrayList<>();
+            if(table.getRecordList().isEmpty()) {
+                return table;
+            }
+
             table.getMappedRecordList().forEach(row -> {
-                if (row.get(whereColumn.get()).equals(whereValue.get())) {
+                if (row.get(whereColumn).equals(whereValue)) {
                     Record record = new Record();
                     record.setValues(new ArrayList<>(row.values()));
                     records.add(record);
                 }
             });
-            table.setRecordList(records);
-        }
 
+            resultTable.setRecordList(records);
+            return resultTable;
+        } else {
+            return table;
+        }
+    }
+
+    public void selectFromTable(Table table, List<Column> columns, String whereString) {
+        Table fetchedData = new Table();
+        fetchedData.setName(table.getName());
+        fetchedData.setColumnList(columns);
+        table = findWhere(table, whereString);
         table.getMappedRecordList().forEach(record -> {
             List<String> row = new ArrayList<>();
             for (Column column : columns) {
@@ -218,6 +251,60 @@ public class DbManager {
             }
             System.out.format("%s\n", String.join("|", row));
         });
+    }
+
+    public Table deleteFromTable(Table table, String whereString) {
+        String whereColumn = whereString.split("=")[0].trim();
+        String whereValue = whereString.split("=")[1].trim();
+
+        int columnIndex = 0;
+        for (Column column : table.getColumnList()) {
+            if (column.getName().equals(whereColumn)) {
+                break;
+            }
+            columnIndex++;
+        }
+
+        for (int i = 0; i < table.getRecordList().size(); i++) {
+            Record record = table.getRecordList().get(i);
+            if (record.getValues().get(columnIndex).equals(whereValue)) {
+                table.getRecordList().remove(record);
+                i--;
+            }
+        }
+
+        return table;
+    }
+
+    public Table updateTable(Table table, String updateString, String whereString) {
+        String whereColumn = whereString.split("=")[0].trim();
+        String whereValue = whereString.split("=")[1].trim();
+
+        String updateColumn = updateString.split("=")[0].trim();
+        String updateValue = updateString.split("=")[1].trim();
+
+        int columnIndex = 0;
+        int updateIndex = 0;
+        for(int i = 0; i < table.getColumnList().size(); i++) {
+            Column column = table.getColumnList().get(i);
+            if(column.getName().equals(whereColumn)){
+                columnIndex = i;
+            }
+            if(column.getName().equals(updateColumn)){
+                updateIndex = i;
+            }
+        }
+
+        for(int i = 0; i < table.getRecordList().size(); i++) {
+            Record record = table.getRecordList().get(i);
+            if(record.getValues().get(columnIndex).equals(whereValue)) {
+                List<String> newValues = new ArrayList<>(record.getValues());
+                newValues.set(updateIndex, updateValue);
+                record.setValues(newValues);
+            }
+        }
+
+        return table;
     }
 
     public int tableCount() {
@@ -237,13 +324,17 @@ public class DbManager {
         }
     }
 
-    public void insertIntoTable(Table table, List<String> values) {
-
-    }
-
     /*************************************************************************
      * TRANSACTION UTILS
      *************************************************************************/
+
+    public boolean isAutoCommit() {
+        return autoCommit;
+    }
+
+    public void setAutoCommit(boolean toggle){
+        this.autoCommit = toggle;
+    }
 
     public boolean isTransactionInProgress() {
         return transactionInProgress;

@@ -1,19 +1,20 @@
+import parser.Parser;
 import services.DbManager;
 
-import java.util.List;
+import java.io.IOException;
 
 public class TempSimulator {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         DbManager dbManager = DbManager.getInstance();
-        dbManager.setCurrentDb("School");
-//        System.out.println("Auth File Pushed: " + dbManager.pushAuthFile());
-        List<String> tableNames = dbManager.getAllTableNames();
-        for (String tableName: tableNames) {
-            System.out.println("tableName = " + tableName);
-        }
+//        dbManager.setCurrentDb("School");
+        System.out.println("Auth File Pushed: " + dbManager.pushAuthFile());
 
-        dbManager.disconnectSession();
+        while(true){
+            Parser parser = new Parser("temp-user");
+            parser.parseQuery();
+        }
+//        dbManager.disconnectSession();
 
 //        System.out.println("Table Deleted: " + dbManager.deleteTable("Assignment"));
 
