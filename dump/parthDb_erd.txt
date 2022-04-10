@@ -1,0 +1,26 @@
+================ERD====================
+tableName: 1
+Format : Column_name, type, isPrimaryKey
+Columns :
+1  c1   int  true
+2  c2   varchar  false
+3  c3   varchar  false
+
+tableName: 2
+Format : Column_name, type, isPrimaryKey
+Columns :
+1  c3   int  false
+2  c4   varchar  true
+3  c5   varchar  false
+
+tableName: 3
+Format : Column_name, type, isPrimaryKey
+Columns :
+1  c1   int  true
+2  c4   varchar  false
+3  c6   varchar  false
+
+-------------Relation Diagram-------------
+1 ==> 2    relation  N:N
+1 ==> 3    relation  1:1
+2 ==> 3    relation  1:N

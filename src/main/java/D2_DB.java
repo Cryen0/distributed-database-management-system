@@ -2,6 +2,7 @@ import analysis.Analytics;
 import auth.Authentication;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
+import erd.Erd;
 import parser.Parser;
 import transactions.Transaction;
 
@@ -81,6 +82,10 @@ public class D2_DB {
                     break;
                 case "3":
                     // code block for Data Models
+                    System.out.println("Enter the valid database name: ");
+                    String db = String.valueOf(sc.nextLine());
+                    Erd erd = new Erd();
+                    erd.generateErd(db);
                     break;
                 case "4":
                     Analytics a = new Analytics();
