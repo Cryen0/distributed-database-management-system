@@ -172,6 +172,23 @@ public class DbManager {
         return false;
     }
 
+    public List<String> getAllTableNames() {
+        List<String> tableNames = new ArrayList<>();
+        String dbPath = configProperties.getProperty("dbDir") + "/" + this.currentDb;
+        File dbDir = new File(dbPath);
+        File[] fileList = dbDir.listFiles();
+        if (fileList == null) {
+            fileList = new File[0];
+        }
+        for (File file : fileList) {
+            String tableFileName = file.getName();
+            String tableName = tableFileName.replace(".txt", "");
+            tableNames.add(tableName);
+        }
+
+        return tableNames;
+    }
+
     public void selectFromTable(Table table, List<Column> columns, Map<String, String> whereMap) {
         Table fetchedData = new Table();
         fetchedData.setName(table.getName());

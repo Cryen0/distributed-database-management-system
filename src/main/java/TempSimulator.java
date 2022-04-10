@@ -1,11 +1,17 @@
 import services.DbManager;
 
+import java.util.List;
+
 public class TempSimulator {
     public static void main(String[] args) {
 
         DbManager dbManager = DbManager.getInstance();
-//        dbManager.setCurrentDb("School");
-        System.out.println("Auth File Pushed: " + dbManager.pushAuthFile());
+        dbManager.setCurrentDb("School");
+//        System.out.println("Auth File Pushed: " + dbManager.pushAuthFile());
+        List<String> tableNames = dbManager.getAllTableNames();
+        for (String tableName: tableNames) {
+            System.out.println("tableName = " + tableName);
+        }
 
         dbManager.disconnectSession();
 
