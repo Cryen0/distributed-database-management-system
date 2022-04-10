@@ -4,6 +4,7 @@ import model.*;
 import model.Record;
 import services.DbManager;
 import services.ScpHelper;
+import services.io.LogIO;
 import services.io.TableIO;
 
 import java.io.IOException;
@@ -105,24 +106,26 @@ public class Parser {
                 if (!dbManager.isCurrentDbSelected()) {
                     throw new Exception("Please select a database using USE command.");
                 }
-                // if(dbManager.isAutoCommit())dbManager.startTransaction();
                 Table table = new Table();
                 table.setName(keywordName);
                 table.setColumnList(parseColumns(query));
                 dbManager.createTable(table);
-                // if(dbManager.isAutoCommit()) dbManager.commit();
                 System.out.println("Table " + table.getName() + " created.");
             } else {
                 throw new Exception("Invalid keyword.");
             }
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
+
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, keywordName);
+            LogIO.writeToQueryLog(queryLog);
+
             GeneralLog generalLog = new GeneralLog(String.valueOf(execTime), config.getProperty("vm"), dbManager.databaseCount(), dbManager.tableCount());
+            LogIO.writeToGeneralLog(generalLog);
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
-//            dbManager.rollback();
+
         }
     }
 
@@ -141,7 +144,7 @@ public class Parser {
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
-
+            LogIO.writeToEventLog(eventLog);
         }
     }
 
@@ -189,10 +192,11 @@ public class Parser {
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+            LogIO.writeToQueryLog(queryLog);
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
-
+            LogIO.writeToEventLog(eventLog);
         }
     }
 
@@ -209,7 +213,6 @@ public class Parser {
                 }
                 List<String> values = new ArrayList<>(Arrays.asList(matcher.group(2).replaceAll("\'|\"", "").split(",\\s*")));
 
-//                // if(dbManager.isAutoCommit())dbManager.startTransaction();
                 long startTime = new Timestamp(System.currentTimeMillis()).getTime();
                 Table localTable = TableIO.readTable(tableName, false);
                 Table remoteTable = TableIO.readTable(tableName, true);
@@ -226,8 +229,8 @@ public class Parser {
                 long endTime = new Timestamp(System.currentTimeMillis()).getTime();
                 long execTime = endTime - startTime;
                 QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
+                LogIO.writeToQueryLog(queryLog);
                 System.out.println("Record inserted.");
-//                // if(dbManager.isAutoCommit()) dbManager.commit();
 
             } else {
                 throw new Exception("Invalid INSERT statement.");
@@ -235,7 +238,7 @@ public class Parser {
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
-//            dbManager.rollback();
+            LogIO.writeToEventLog(eventLog);
 
         }
     }
@@ -261,7 +264,6 @@ public class Parser {
             String whereString = matcher.group(3);
 
             long startTime = new Timestamp(System.currentTimeMillis()).getTime();
-            // if(dbManager.isAutoCommit())dbManager.startTransaction();
             Table localTable = TableIO.readTable(tableName, false);
             localTable = dbManager.updateTable(localTable, updateString, whereString);
             TableIO.update(localTable, false);
@@ -272,11 +274,11 @@ public class Parser {
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
-            // if(dbManager.isAutoCommit()) dbManager.commit();
+            LogIO.writeToQueryLog(queryLog);
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
-//            dbManager.rollback();
+            LogIO.writeToEventLog(eventLog);
         }
     }
 
@@ -299,7 +301,6 @@ public class Parser {
 
             String whereString = matcher.group(2);
 
-            // if(dbManager.isAutoCommit())dbManager.startTransaction();
             long startTime = new Timestamp(System.currentTimeMillis()).getTime();
             Table localTable = TableIO.readTable(tableName, false);
             localTable = dbManager.deleteFromTable(localTable, whereString);
@@ -311,11 +312,11 @@ public class Parser {
             long endTime = new Timestamp(System.currentTimeMillis()).getTime();
             long execTime = endTime - startTime;
             QueryLog queryLog = new QueryLog(config.getProperty("vm"), loggedInUser, dbManager.getCurrentDb(), String.valueOf(execTime), query, tableName);
-            // if(dbManager.isAutoCommit()) dbManager.commit();
+            LogIO.writeToQueryLog(queryLog);
         } catch (Exception e) {
             System.out.println(e);
             EventLog eventLog = new EventLog("Application crashed");
-//            dbManager.rollback();
+            LogIO.writeToEventLog(eventLog);
         }
     }
 
@@ -329,15 +330,19 @@ public class Parser {
                 throw new Exception("Unknown Statement detected.");
             }
             if (!dbManager.isTransactionInProgress()) {
-//                dbManager.setAutoCommit(false);
                 dbManager.startTransaction();
+                String transactionSuccess = "Transaction has started";
                 System.out.println("Transaction has started");
+                EventLog eventLog = new EventLog("Transaction has started");
+                LogIO.writeToEventLog(eventLog);
             } else {
                 throw new Exception("Transaction already in progress!");
             }
 
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application crashed");
+            LogIO.writeToEventLog(eventLog);
         }
     }
 
@@ -348,8 +353,14 @@ public class Parser {
             }
 //            dbManager.setAutoCommit(true);
             dbManager.commit();
+            String commitSuccess = "The changes have been committed";
+            System.out.println(commitSuccess);
+            EventLog eventLog = new EventLog(commitSuccess);
+            LogIO.writeToEventLog(eventLog);
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application Crashed");
+            LogIO.writeToEventLog(eventLog);
         }
     }
 
@@ -358,10 +369,14 @@ public class Parser {
             if (!dbManager.isTransactionInProgress()) {
                 throw new Exception("No transaction in process.");
             }
-//            dbManager.setAutoCommit(true);
+            String rollbackSuccess = "The rollback was successful";
+            System.out.println(rollbackSuccess);
+            EventLog eventLog = new EventLog(rollbackSuccess);
             dbManager.rollback();
         } catch (Exception e) {
             System.out.println(e);
+            EventLog eventLog = new EventLog("Application Crashed");
+            LogIO.writeToEventLog(eventLog);
         }
     }
 
