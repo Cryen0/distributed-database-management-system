@@ -93,14 +93,5 @@ public class D2_DB {
                     break;
             }
         }
-
-        Transaction t = new Transaction();
-        t.copyWholeDirectory("C:\\G drive\\DW\\dummy", "C:\\G drive\\DW\\dummyc");
-        t.deleteWholeDirectory("C:\\G drive\\DW\\dummyc");
-
-        System.out.print("Enter your query here: ");
-        String query = sc.nextLine();
-        Parser parser = new Parser(currentUID);
-        parser.getColumnValues(query.trim());
     }
 }
